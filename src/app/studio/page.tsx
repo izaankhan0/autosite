@@ -26,8 +26,8 @@ export default function StudioPage() {
       if (result.success && result.previewHtml) {
         setPreviewSrcDoc(result.previewHtml);
         toast({
-          title: "Code Generated & Theme Updated!",
-          description: "A live preview is available, and the application theme has been updated.",
+          title: "Portfolio Generated!",
+          description: "A live preview of your themed website is now available below.",
         });
       } else {
         toast({
