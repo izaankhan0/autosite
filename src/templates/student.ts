@@ -551,7 +551,7 @@ export default function GeneratedPage() {
     .academic-card-preview .description-preview { font-size: 0.85rem; line-height: 1.6; color: ${escCssVal(foregroundColor)}D9; }
 
     .student-skills-section-preview { padding: 3rem 1rem; margin: 2rem 0; background-color: ${escCssVal(data.primaryColor ? `color-mix(in srgb, ${data.primaryColor} 80%, ${data.backgroundColor} 40%)` : '#1A2E40')}; scroll-margin-top: 80px; }
-    .student-skills-section-preview h5 { text-align: center; font-size: clamp(1.6rem, 4vw, 2.2rem); color: ${escCssVal(primaryContrast)}; padding-bottom: 2rem; font-family:'Work Sans', sans-serif; font-weight:600; display:flex; align-items:center; justify-content:center; gap:0.5rem;} 
+    .student-skills-section-preview h5 { text-align: center; font-size: clamp(1.6rem, 4vw, 2.2rem); color: ${escCssVal(primaryContrast)}; padding-bottom: 1rem; font-family:'Work Sans', sans-serif; font-weight:600; display:flex; align-items:center; justify-content:center; gap:0.5rem;} 
     .student-skills-section-preview h5 svg { width:1em; height:1em; }
     .student-skills-list-container-preview { display:flex; flex-wrap:wrap; justify-content:center; gap:0.6rem; max-width:800px; margin:0 auto;}
     .student-skill-tag-preview { background-color: ${escCssVal(data.accentColor)}BF; color: ${escCssVal(accentContrast)}; padding: 0.4rem 0.8rem; border-radius:6px; font-size:0.8rem; font-weight:500; box-shadow: 0 1px 3px rgba(0,0,0,0.15); transition: all 0.2s ease; border: 1px solid ${escCssVal(accentContrast ? `color-mix(in srgb, ${accentContrast} 30%, transparent)`: '#FFFFFF33')}; }
@@ -561,7 +561,7 @@ export default function GeneratedPage() {
     .student-work-experience-intro-preview { width: 100%; text-align:center; } @media (min-width: 768px) { .student-work-experience-intro-preview { width: 35%; text-align:left; } }
     .student-work-experience-intro-preview h6 { font-size: clamp(1.8rem, 4.5vw, 2.5rem); color: ${escCssVal(data.primaryColor)}; margin-bottom:1.25rem; font-family:'Work Sans', sans-serif; font-weight:600; display:flex; align-items:center; justify-content:center; gap:0.5rem;} @media (min-width:768px) {.student-work-experience-intro-preview h6 {justify-content:flex-start;}}
     .student-work-experience-intro-preview h6 svg { width:0.9em; height:0.9em; }
-    .student-work-experience-intro-preview img { max-height: 320px; object-fit:cover; margin: 0 auto 1rem auto; border-radius:10px; box-shadow: 0 4px 15px rgba(0,0,0,0.15); border: 1.5px solid ${escCssVal(data.primaryColor)}44; } @media (min-width:768px){.student-work-experience-intro-preview img{margin-left:0; max-height:380px;}}
+    .student-work-experience-intro-preview img { max-height: 270px; object-fit:cover; margin: 0 auto 1rem auto; border-radius:10px;} @media (min-width:768px){.student-work-experience-intro-preview img{margin-left:0; max-height:350px;}}
     .student-work-cards-container-preview { width: 100%; display: grid; grid-template-columns:1fr; gap:1.25rem; } @media (min-width: 600px) { .student-work-cards-container-preview { grid-template-columns:repeat(auto-fit, minmax(280px, 1fr)); } } @media (min-width:768px){.student-work-cards-container-preview{width:65%;}}
     .workPlaces-preview { background-color: ${escCssVal(data.primaryColor ? `color-mix(in srgb, ${data.primaryColor} 85%, ${data.backgroundColor} 50%)` : 'rgb(25,45,70)')}; color: ${escCssVal(primaryContrast)}E6; padding: 1.25rem; border-radius:10px; transition: transform 0.2s ease, box-shadow 0.2s ease; box-shadow: 0 3px 10px rgba(0,0,0,0.2); border: 1px solid ${escCssVal(data.primaryColor)}66;}
     .workPlaces-preview:hover { transform: scale(1.015) translateY(-3px); box-shadow: 0 5px 15px rgba(0,0,0,0.25); }
@@ -683,7 +683,7 @@ export default function GeneratedPage() {
   
   if (previewSkillsArray.length > 0) {
     previewHtml += "  <section id='skills_preview_id' class='student-skills-section-preview' style='background-color: " + escCssVal(data.primaryColor ? `color-mix(in srgb, ${data.primaryColor} 80%, ${data.backgroundColor} 40%)` : '#1A2E40') + ";'>";
-    previewHtml += "    <h5 style='color:" + escCssVal(primaryContrast) + ";'><svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><circle cx='12' cy='8' r='6'/><path d='M15.477 12.89 17 22l-5-3-5 3 1.523-9.11'/></svg>Skills & Affiliations</h5>";
+    previewHtml += "    <h5 style='color:" + escCssVal(primaryContrast) + ";'><img src='https://img.icons8.com/?size=100&id=52228&format=png&color=FFFFFF' width='28' height='44' /></img>Skills & Strengths</h5>";
     previewHtml += "    <div class='student-skills-list-container-preview'>";
     previewSkillsArray.forEach(item => {
       previewHtml += "<span class='student-skill-tag-preview' style='background-color:" + escCssVal(data.accentColor) + "BF; color:" + escCssVal(accentContrast) + "; border: 1px solid " + escCssVal(accentContrast ? `color-mix(in srgb, ${accentContrast} 30%, transparent)`: '#FFFFFF33') + ";'>" +
@@ -696,9 +696,9 @@ export default function GeneratedPage() {
   if (showProjectsSection && projects && projects.filter(p => p && p.name).length > 0) {
     previewHtml += "  <section id='work_preview_id' class='student-work-experience-section-preview'>";
     previewHtml += "    <div class='student-work-experience-intro-preview'>";
-    previewHtml += "      <h6 style='color:" + escCssVal(data.primaryColor) + ";'><svg xmlns='http://www.w3.org/2000/svg' width='24' height='24' viewBox='0 0 24 24' fill='none' stroke='currentColor' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><rect x='2' y='7' width='20' height='14' rx='2' ry='2'></rect><path d='M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16'></path></svg>Experience</h6>";
+    previewHtml += "      <h6 style='color:" + escCssVal(data.primaryColor) + ";'><img src='https://img.icons8.com/?size=100&id=25044&format=png&color=FFFFFF' width='40' height='40' style='margin:0px 7px;'></img>Work Experience</h6>";
     const workSectionImage = (projects && projects.length > 0 && projects[0] && projects[0].imageUrl) ? projects[0].imageUrl : heroImagePlaceholder;
-    previewHtml += "      <img src='" + escAttr(workSectionImage || 'https://placehold.co/400x500.png?text=Work+Image') + "' alt='Work Experience Visual' data-ai-hint='office professional work' style='border-color:" + escCssVal(data.primaryColor) + "55;'/>";
+    previewHtml += "      <img src=\"https://izaankhan0.github.io/marium/images/workpic.png\" alt='Work Experience Visual' data-ai-hint='office professional work' style='border-color:" + escCssVal(data.primaryColor) + "55;'/>";
     previewHtml += "    </div>";
     previewHtml += "    <div class='student-work-cards-container-preview'>";
     (projects || []).filter(p => p && p.name).forEach((projectItem) => {
