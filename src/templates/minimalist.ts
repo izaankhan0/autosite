@@ -199,7 +199,6 @@ const MinimalisticElegancePortfolioPage: React.FC<{ portfolioData: FormSchemaTyp
     { id: "about", label: "About Me", condition: showAboutSection },
     { id: "academic", label: "Academics", condition: showAcademicSection && academicEntries.filter(Boolean).length > 0 },
     { id: "projects", label: "Projects", condition: showProjectsSection && projects.filter(Boolean).length > 0 },
-    { id: "certs", label: "Certificates", condition: (academicEntries[0]?.imageUrl || academicEntries[1]?.imageUrl) }, // Original certs carousel
     { id: "learning", label: "Skills", condition: showSkillsSection && aboutSkills },
     { id: "contact", label: "Contact", condition: showContactSection },
   ].filter(link => link.condition);
@@ -360,12 +359,6 @@ const MinimalisticElegancePortfolioPage: React.FC<{ portfolioData: FormSchemaTyp
              <section ref={el => sectionsRef.current['learning'] = el} id="learning" className="learning-preview flex flex-col items-center justify-center py-16 px-[10%] min-h-screen text-center">
               <h2 style={{ color: primaryColor }}>What am I learning?</h2>
               <p className="max-w-2xl mb-8" style={{color: fgColor}}>{aboutSkills}</p>
-              {/* Placeholder for skill images from reference, as they are not in form */}
-              <div className="learning-images-preview flex flex-wrap justify-center gap-4">
-                <img src="https://placehold.co/100x100/E9ECEF/495057?text=Skill1" alt="Skill 1" data-ai-hint="technology logo" />
-                <img src="https://placehold.co/100x100/E9ECEF/495057?text=Skill2" alt="Skill 2" data-ai-hint="technology logo" />
-                <img src="https://placehold.co/100x100/E9ECEF/495057?text=Skill3" alt="Skill 3" data-ai-hint="technology logo" />
-              </div>
             </section>
           )}
 
@@ -567,34 +560,30 @@ export default function GeneratedPage() {
     previewHtmlString += '</div></section>';
   }
 
-  const certImagesPreview = [data.academicEntries?.[0]?.imageUrl, data.academicEntries?.[1]?.imageUrl].filter(Boolean) as string[];
-  if (certImagesPreview.length > 0) {
-    previewHtmlString += '<section id="certs_preview_id" class="certs-preview">';
-    previewHtmlString += '<div class="cert-text-preview"><h2>Certifications</h2>';
-    if (data.contactLinkedin) previewHtmlString += '<p>More on my <a href="' + escAttr(data.contactLinkedin) + '" target="_blank">LinkedIn</a></p>';
-    previewHtmlString += '</div>';
-    previewHtmlString += '<div class="cert-box-preview" id="cert_box_preview_minimalist">';
-    previewHtmlString += '<div class="cert-images-preview">';
-    certImagesPreview.forEach((src, index) => {
-        previewHtmlString += '<img src="' + escAttr(src) + '" alt="Certificate ' + (index + 1) + '" class="cert-image-preview' + (index === 0 ? ' active' : '') + '" data-ai-hint="certificate document professional"/>';
-    });
-    previewHtmlString += '</div>';
-    if (certImagesPreview.length > 1) {
-        previewHtmlString += '<button class="prev-preview" onclick="moveCertSlidePreviewMinimalist(-1)">&#10094;</button>';
-        previewHtmlString += '<button class="next-preview" onclick="moveCertSlidePreviewMinimalist(1)">&#10095;</button>';
-    }
-    previewHtmlString += '</div></section>';
-  }
+  // const certImagesPreview = [data.academicEntries?.[0]?.imageUrl, data.academicEntries?.[1]?.imageUrl].filter(Boolean) as string[];
+  // if (certImagesPreview.length > 0) {
+  //   previewHtmlString += '<section id="certs_preview_id" class="certs-preview">';
+  //   previewHtmlString += '<div class="cert-text-preview"><h2>Certifications</h2>';
+  //   if (data.contactLinkedin) previewHtmlString += '<p>More on my <a href="' + escAttr(data.contactLinkedin) + '" target="_blank">LinkedIn</a></p>';
+  //   previewHtmlString += '</div>';
+  //   previewHtmlString += '<div class="cert-box-preview" id="cert_box_preview_minimalist">';
+  //   previewHtmlString += '<div class="cert-images-preview">';
+  //   certImagesPreview.forEach((src, index) => {
+  //       previewHtmlString += '<img src="' + escAttr(src) + '" alt="Certificate ' + (index + 1) + '" class="cert-image-preview' + (index === 0 ? ' active' : '') + '" data-ai-hint="certificate document professional"/>';
+  //   });
+  //   previewHtmlString += '</div>';
+  //   if (certImagesPreview.length > 1) {
+  //       previewHtmlString += '<button class="prev-preview" onclick="moveCertSlidePreviewMinimalist(-1)">&#10094;</button>';
+  //       previewHtmlString += '<button class="next-preview" onclick="moveCertSlidePreviewMinimalist(1)">&#10095;</button>';
+  //   }
+  //   previewHtmlString += '</div></section>';
+  // }
   
   if (data.showSkillsSection && data.aboutSkills) {
     previewHtmlString += '<section id="learning_preview_id" class="learning-preview">';
     previewHtmlString += '<h2>What am I learning?</h2>';
     previewHtmlString += '<p>' + escHtml(data.aboutSkills) + '</p>';
-    previewHtmlString += '<div class="learning-images-preview">';
-    previewHtmlString += '<img src="https://placehold.co/100x100/E9ECEF/495057?text=Skill1" alt="Skill 1" data-ai-hint="technology logo" />';
-    previewHtmlString += '<img src="https://placehold.co/100x100/E9ECEF/495057?text=Skill2" alt="Skill 2" data-ai-hint="technology logo" />';
-    previewHtmlString += '<img src="https://placehold.co/100x100/E9ECEF/495057?text=Skill3" alt="Skill 3" data-ai-hint="technology logo" />';
-    previewHtmlString += '</div></section>';
+    previewHtmlString += '</section>';
   }
 
   if (data.showContactSection) {
@@ -618,7 +607,6 @@ export default function GeneratedPage() {
     { id: "about_preview_id", label: "About Me", condition: data.showAboutSection },
     { id: "academic_preview_id", label: "Academics", condition: data.showAcademicSection && data.academicEntries && data.academicEntries.filter(Boolean).length > 0 },
     { id: "projects_preview_id", label: "Projects", condition: data.showProjectsSection && data.projects && data.projects.filter(Boolean).length > 0 },
-    { id: "certs_preview_id", label: "Certificates", condition: certImagesPreview.length > 0 },
     { id: "learning_preview_id", label: "Skills", condition: data.showSkillsSection && data.aboutSkills },
     { id: "contact_preview_id", label: "Contact", condition: data.showContactSection },
   ].filter(link => link.condition);
