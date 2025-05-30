@@ -1,15 +1,14 @@
-
 // src/templates/index.ts
 import type { FormSchemaType } from "@/schemas/websiteFormSchema";
 import { getModernTemplate } from "./modern";
 import { getMinimalistTemplate } from "./minimalist";
-import { getClassicTemplate } from "./classic";
-import { getStudentTemplate } from "./student"; // Added
+import { getStudentTemplate } from "./student";
 import { getCorporateTemplate } from "./corporate";
 import { getFuturisticTemplate } from "./futuristic";
 import { getElegantTemplate } from "./elegant";
+// Removed import for getCreativeTemplate as classic.ts is being deleted
 
-export const availableThemes = ["modern", "minimalist", "classic", "student", "corporate", "futuristic", "elegant"] as const; // Replaced playful with student
+export const availableThemes = ["modern", "minimalist", "student", "corporate", "futuristic", "elegant"] as const;
 export type ThemeKey = typeof availableThemes[number];
 
 export interface TemplateOutput {
@@ -18,7 +17,7 @@ export interface TemplateOutput {
 }
 
 // This function remains crucial for determining text color against a given background.
-export function getContrastColor(hexcolor: string): string {
+export function getContrastColor(hexcolor: string | undefined): string {
   if (!hexcolor || !hexcolor.startsWith('#')) {
     console.warn('Invalid hex color for contrast calculation:', hexcolor, 'Defaulting to black.');
     return '#000000'; 
@@ -52,9 +51,7 @@ export function getTemplate(theme: ThemeKey, data: FormSchemaType): TemplateOutp
       return getModernTemplate(data);
     case "minimalist":
       return getMinimalistTemplate(data);
-    case "classic":
-      return getClassicTemplate(data);
-    case "student": // Added student case
+    case "student":
       return getStudentTemplate(data);
     case "corporate":
       return getCorporateTemplate(data);
@@ -66,8 +63,7 @@ export function getTemplate(theme: ThemeKey, data: FormSchemaType): TemplateOutp
       // This case should ideally not be reached if types are correct
       // and all availableThemes have a corresponding case.
       // Fallback to modern template as a safe default.
-      console.warn(`Unknown theme: "${theme}", defaulting to modern theme.`);
+      console.warn("Unknown theme: \"" + theme + "\", defaulting to modern theme.");
       return getModernTemplate(data);
   }
 }
-

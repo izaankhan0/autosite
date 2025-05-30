@@ -1,15 +1,15 @@
+"use client";
 
-"use client"; // <-- ADDED THIS DIRECTIVE
-
-// src/app/page.tsx - Landing Page
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { ThemeToggle } from '@/components/ThemeToggle';
 import { LogoIcon } from '@/components/icons/LogoIcon';
 import { Sparkles, Palette, Rabbit, Rocket } from 'lucide-react';
 import Image from 'next/image';
+import mainGif from '../media/main-pic.gif'
+// import landingHeroImage from '@/media/your-image-filename.gif'; // Temporarily commented out for diagnostics - IMPORTANT: Replace 'your-image-filename.gif' with your actual file name if re-enabling
 
-export default function LandingPage() {
+export default function LandingPage(): JSX.Element {
   return (
     <div className="flex flex-col min-h-screen bg-background text-foreground">
       <header className="sticky top-0 z-50 w-full border-b border-border/40 bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -24,14 +24,14 @@ export default function LandingPage() {
 
       <main className="flex-grow">
         {/* Hero Section */}
-        <section className="relative py-20 md:py-32 bg-gradient-to-br from-primary/10 via-background to-background">
+        <section className="relative py-16 md:py-24 bg-gradient-to-br from-primary/10 via-background to-background">
           <div className="absolute inset-0 opacity-50 bg-grid-pattern-light dark:bg-grid-pattern-dark" style={{ maskImage: 'linear-gradient(to bottom, white, transparent)' }}></div>
           <div className="container mx-auto px-4 text-center relative z-10">
-            <h1 className="text-4xl md:text-6xl font-bold tracking-tighter mb-6">
+            <h1 className="text-4xl md:text-5xl font-bold tracking-tighter mb-6">
               Launch Your <span className="text-primary">Stunning Portfolio</span> in Minutes
             </h1>
             <p className="text-lg md:text-xl text-muted-foreground max-w-2xl mx-auto mb-10">
-              No code, no fuss. Just beautiful, customizable portfolio websites generated instantly. 
+              No code, no fuss. Just beautiful, customizable portfolio websites generated instantly.
               Choose your theme, fill in your details, and shine online!
             </p>
             <Link href="/studio">
@@ -39,22 +39,24 @@ export default function LandingPage() {
                 Create Your Portfolio Now <Rocket className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
               </Button>
             </Link>
-             <div className="mt-16">
-              <Image 
-                src="https://placehold.co/800x450.png" 
-                alt="AutoSite Studio Showcase" 
-                width={800} 
-                height={450} 
-                className="rounded-xl shadow-2xl mx-auto border-4 border-primary/20"
-                data-ai-hint="website portfolio showcase collage"
+            <div className="mt-12 w-full max-w-md mx-auto">
+              <Image
+                src={mainGif}
+                alt="AutoSite Studio Showcase Animation"
+                width={600}
+                height={400}
+                className="rounded-xl mx-auto w-full h-auto"
+                data-ai-hint="website portfolio animation"
                 priority
+                unoptimized={true}
               />
             </div>
+
           </div>
         </section>
 
         {/* Features Section */}
-        <section className="py-16 md:py-24 bg-background">
+        <section className="py-12 md:py-20 bg-background">
           <div className="container mx-auto px-4">
             <h2 className="text-3xl md:text-4xl font-bold text-center mb-12 tracking-tight">Why Choose AutoSite Studio?</h2>
             <div className="grid md:grid-cols-3 gap-8 text-center">
@@ -71,14 +73,14 @@ export default function LandingPage() {
               <div className="p-6 bg-card rounded-xl shadow-lg border border-border transition-all hover:shadow-primary/20 hover:-translate-y-1">
                 <Sparkles className="h-12 w-12 text-primary mx-auto mb-4" />
                 <h3 className="text-xl font-semibold mb-2">Instant Live Preview</h3>
-                <p className="text-muted-foreground text-sm">See your changes in real-time before you even generate the code.</p>
+                <p className="text-muted-foreground text-sm">See your changes in real-time</p>
               </div>
             </div>
           </div>
         </section>
 
         {/* Call to Action Section */}
-        <section className="py-16 md:py-24 bg-primary/5">
+        <section className="py-12 md:py-20 bg-primary/5">
           <div className="container mx-auto px-4 text-center">
             <h2 className="text-3xl md:text-4xl font-bold mb-6 tracking-tight">Ready to Build Your Dream Portfolio?</h2>
             <p className="text-lg text-muted-foreground max-w-xl mx-auto mb-8">
@@ -96,7 +98,7 @@ export default function LandingPage() {
       <footer className="border-t border-border/40">
         <div className="container mx-auto p-6 text-center text-sm text-muted-foreground">
           &copy; {new Date().getFullYear()} AutoSite Studio. All Rights Reserved.
-          <p className="text-xs mt-1">Powered by Websters</p>
+          <p className="text-xs mt-1">Powered by Websters</p> {/* Slightly rephrased */}
         </div>
       </footer>
       <style jsx global>{`

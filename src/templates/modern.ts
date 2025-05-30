@@ -1,577 +1,1040 @@
 
 // src/templates/modern.ts
-import type { FormSchemaType, AcademicEntryType } from "@/schemas/websiteFormSchema";
-import { getContrastColor } from ".";
+import type { FormSchemaType, AcademicEntryType, ProjectType } from "@/schemas/websiteFormSchema";
 
-// Escaping helper for JavaScript string literals
+// --- Escaping Helper Functions ---
 const escJsStr = (str: string | undefined | null): string => {
   if (str === null || typeof str === 'undefined') return '';
-  return str
-    .replace(/\\/g, "\\\\")
-    .replace(/`/g, "\\`")
-    .replace(/"/g, '\\"')
-    .replace(/\n/g, "\\n");
+  return str.replace(/\\/g, "\\\\").replace(/`/g, "\\`").replace(/"/g, '\\"').replace(/\n/g, "\\n");
 };
-
-// Escaping helpers for HTML content
 const escHtml = (str: string | undefined | null): string => {
   if (str === null || typeof str === 'undefined') return '';
-  return str
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;")
-    .replace(/`/g, "&#96;");
+  return str.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;").replace(/'/g, "&#039;").replace(/`/g, "&#96;");
 };
-
-// Escaping helpers for HTML attributes
 const escAttr = (str: string | undefined | null): string => {
   if (str === null || typeof str === 'undefined') return '';
-  return str
-    .replace(/"/g, "&quot;")
-    .replace(/`/g, "&#96;");
+  return str.replace(/"/g, "&quot;").replace(/`/g, "&#96;");
 };
-
-// Escaping for CSS values
 const escCssVal = (str: string | undefined | null): string => {
   if (str === null || typeof str === 'undefined') return '';
-  return str.replace(/`/g, "'"); 
+  return str.replace(/`/g, "'").replace(/"/g, "'").replace(/\\/g, '\\\\').replace(/</g, '').replace(/>/g, '');
 };
+// --- End Escaping Helper Functions ---
 
-
-export function getModernTemplate(data: FormSchemaType): TemplateOutput {
-  const siteNameClean = (data.yourName?.trim().replace(/\W+/g, '') || "PortfolioSite");
-  const primaryContrast = getContrastColor(data.primaryColor);
-  const accentContrast = getContrastColor(data.accentColor);
-  const foregroundColor = getContrastColor(data.backgroundColor);
-
-  const projectCardTsx = (project: NonNullable<FormSchemaType['project1']>) => {
-    let imagePart = '';
-    if (project.imageUrl) {
-        imagePart = `<Image src={"${escJsStr(project.imageUrl)}"} alt={"${escJsStr(project.name)}"} width={400} height={300} className="rounded-md mb-4 w-full h-auto object-cover" data-ai-hint="website screenshot" />`;
-    } else {
-        imagePart = `<div className="w-full h-[225px] bg-muted rounded-md mb-4 flex items-center justify-center border border-border"><span className="text-muted-foreground text-sm">Preview for ${escJsStr(project.name)}</span></div>`;
-    }
-    
-    return `
-    <div className="bg-card p-6 rounded-lg shadow-md border border-border hover:shadow-lg transition-shadow duration-300">
-      ${imagePart}
-      <h3 className="text-2xl font-semibold text-primary mb-2">${escJsStr(project.name)}</h3>
-      <p className="text-card-foreground mb-3 text-sm" dangerouslySetInnerHTML={{ __html: "${escJsStr((project.description || "")).replace(/\\n/g, '<br />')}" }} />
-      <p className="text-muted-foreground text-xs mb-4"><strong>Technologies:</strong> ${escJsStr(project.technologies)}</p>
-      <div className="flex gap-3">
-        ${project.liveUrl ? `<a href={"${escJsStr(project.liveUrl)}"} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors">
-          <ExternalLink className="w-4 h-4 mr-2" /> Live Site
-        </a>` : ''}
-        ${project.repoUrl ? `<a href={"${escJsStr(project.repoUrl)}"} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-4 py-2 text-sm font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors">
-          <Github className="w-4 h-4 mr-2" /> View Code
-        </a>` : ''}
-      </div>
-    </div>
-  `;
-  };
-  
-  const project1TsxString = (data.showProject1 && data.project1) ? projectCardTsx(data.project1) : '';
-  const project2TsxString = (data.showProject2 && data.project2) ? projectCardTsx(data.project2) : '';
-
-  const academicEntryTsx = (academic: AcademicEntryType, entryNumber: 1 | 2) => {
-    if (!academic || !academic.qualification) return '';
-    return `
-      <div className="mb-6 pb-6 ${entryNumber === 1 && data.showAcademic2 && data.academic2?.qualification ? 'border-b border-dashed border-border' : ''}">
-        ${academic.imageUrl ? `<Image src={"${escJsStr(academic.imageUrl)}"} alt={"${escJsStr(academic.qualification || 'Academic Achievement')}"} width={500} height={300} className="rounded-md mb-4 w-full h-auto object-cover mx-auto max-w-md border" data-ai-hint="education university campus" />` : ''}
-        <h3 className="text-xl font-semibold text-primary/90 mb-1">${escJsStr(academic.qualification)}</h3>
-        <p className="text-lg text-muted-foreground mb-1">${escJsStr(academic.institution)}</p>
-        <p className="text-md text-muted-foreground mb-2"><em>${escJsStr(academic.graduationYear)}</em></p>
-        ${academic.grades ? `<p className="text-md text-muted-foreground mb-3">Grades: ${escJsStr(academic.grades)}</p>` : ''}
-        ${academic.description ? `<p className="text-md leading-relaxed text-card-foreground/90" dangerouslySetInnerHTML={{ __html: "${escJsStr(academic.description).replace(/\\n/g, '<br />')}" }} />` : ''}
-      </div>
-    `;
-  };
-  const academic1TsxString = (data.showAcademic1 && data.academic1) ? academicEntryTsx(data.academic1, 1) : '';
-  const academic2TsxString = (data.showAcademic2 && data.academic2) ? academicEntryTsx(data.academic2, 2) : '';
-
-
-  const fullTsx = `
-// Generated Page: ${escJsStr(data.yourName)}'s Portfolio - Modern Theme
-import React from 'react';
-import Image from 'next/image';
-import { Mail, Linkedin, Github, Instagram, Download, ExternalLink, UserCircle, Sparkles, LayoutGrid, BookOpen } from 'lucide-react';
-import type { FormSchemaType, AcademicEntryType } from "@/schemas/websiteFormSchema"; 
-
-const ${siteNameClean}PortfolioPage: React.FC<{ portfolioData: FormSchemaType }> = ({ portfolioData }) => {
-   if (!portfolioData || typeof portfolioData.yourName === 'undefined') {
-    return (
-      <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', textAlign: 'center', color: '#FF0000', backgroundColor: '#FFF0F0' }}>
-        <h1>Error: Portfolio Data Not Loaded</h1>
-        <p>The necessary data to display this portfolio is missing or malformed.</p>
-      </div>
-    );
+function getContrastColor(hexcolor: string | undefined): string {
+  if (!hexcolor || !hexcolor.startsWith("#")) return "#FFFFFF"; // Default for dark backgrounds
+  let processedHex = hexcolor.slice(1);
+  if (processedHex.length === 3) {
+    processedHex = processedHex.split("").map(char => char + char).join("");
   }
-  const skillsArray = (portfolioData.aboutSkills || "").split(',').map(skill => skill.trim()).filter(skill => skill);
+  if (processedHex.length !== 6) return "#FFFFFF";
+  try {
+    const r = parseInt(processedHex.substring(0, 2), 16);
+    const g = parseInt(processedHex.substring(2, 4), 16);
+    const b = parseInt(processedHex.substring(4, 6), 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 128 ? "#000000" : "#FFFFFF"; // Return black for light backgrounds, white for dark
+  } catch (e) {
+    console.error("Error parsing hex for contrast:", e);
+    return "#FFFFFF";
+  }
+}
 
-  const renderAcademicEntry = (academic: AcademicEntryType | undefined, entryNumber: 1 | 2) => {
-    if (!academic || !academic.qualification) return null;
-    const isLastVisibleAcademic = 
-        (entryNumber === 1 && (!portfolioData.showAcademic2 || !portfolioData.academic2?.qualification)) || 
-        (entryNumber === 2);
+export function getModernTemplate(data: FormSchemaType): { fullTsx: string; previewHtml: string } {
+  const siteNameClean = (data.yourName?.trim().replace(/\W+/g, '') || "PortfolioSite");
 
-    return (
-      <div className={"mb-6 pb-6 " + (!isLastVisibleAcademic ? "border-b border-dashed border-border" : "")}>
-        {academic.imageUrl && (
-          <Image 
-            src={academic.imageUrl} 
-            alt={academic.qualification || 'Academic Achievement'} 
-            width={500} 
-            height={300} 
-            className="rounded-md mb-4 w-full h-auto object-cover mx-auto max-w-md border"
-            data-ai-hint="education university campus"
-          />
-        )}
-        <h3 className="text-xl font-semibold text-primary/90 mb-1">{academic.qualification}</h3>
-        {academic.institution && <p className="text-lg text-muted-foreground mb-1">{academic.institution}</p>}
-        {academic.graduationYear && <p className="text-md text-muted-foreground mb-2"><em>{academic.graduationYear}</em></p>}
-        {academic.grades && <p className="text-md text-muted-foreground mb-3">Grades: {academic.grades}</p>}
-        {academic.description && <p className="text-md leading-relaxed text-card-foreground/90" dangerouslySetInnerHTML={{ __html: (academic.description).replace(/\\n/g, '<br />') }} />}
-      </div>
-    );
-  };
-
-  return (
-    <div className="bg-background text-foreground min-h-screen">
-      {/* Hero Section */}
-      <header className="bg-primary text-primary-foreground py-16 px-6 text-center">
-        <Image 
-          src={portfolioData.heroImagePlaceholder || "https://placehold.co/150x150.png"} 
-          alt={portfolioData.yourName || 'Portfolio Owner'} 
-          width={150} 
-          height={150} 
-          className="rounded-full mx-auto mb-6 border-4 border-accent object-cover"
-          data-ai-hint="portrait professional" 
-          priority
-        />
-        <h1 className="text-5xl font-bold mb-2">{portfolioData.yourName}</h1>
-        <h2 className="text-2xl font-light mb-4 opacity-90">{portfolioData.heroTitle}</h2>
-        {portfolioData.heroTagline && <p className="text-lg max-w-2xl mx-auto mb-8 opacity-90" dangerouslySetInnerHTML={{ __html: (portfolioData.heroTagline).replace(/\\n/g, '<br />') }} />}
-        {portfolioData.heroCtaText && (
-          <a href="#contact" className="inline-flex items-center justify-center px-8 py-3 text-lg font-medium rounded-md bg-accent text-accent-foreground hover:bg-accent/90 transition-colors">
-            {portfolioData.heroCtaText}
-          </a>
-        )}
-      </header>
-
-      {/* Navigation (Optional sticky) */}
-      <nav className="bg-background border-b border-border shadow-sm sticky top-0 z-50">
-        <div className="container mx-auto px-6 py-3 flex justify-center space-x-6">
-          {portfolioData.showAboutSection && <a href="#about" className="text-foreground hover:text-primary transition-colors">About</a>}
-          {portfolioData.showAcademicSection && <a href="#academic" className="text-foreground hover:text-primary transition-colors">Education</a>}
-          {portfolioData.showProjectsSection && <a href="#projects" className="text-foreground hover:text-primary transition-colors">Projects</a>}
-          {portfolioData.showSkillsSection && <a href="#skills" className="text-foreground hover:text-primary transition-colors">Skills</a>}
-          {portfolioData.showContactSection && <a href="#contact" className="text-foreground hover:text-primary transition-colors">Contact</a>}
-        </div>
-      </nav>
-
-      <main className="container mx-auto px-6 py-12">
-        {portfolioData.showAboutSection && (
-          <section id="about" className="mb-16 scroll-mt-20">
-            <div className="text-center mb-10">
-              <h2 className="text-4xl font-semibold text-primary inline-flex items-center">
-                <UserCircle className="w-10 h-10 mr-3" /> About Me
-              </h2>
-            </div>
-            <div className="bg-card text-card-foreground p-8 rounded-xl shadow-lg border border-border">
-              {portfolioData.aboutBio && <p className="text-lg leading-relaxed mb-6" dangerouslySetInnerHTML={{ __html: (portfolioData.aboutBio).replace(/\\n/g, '<br />') }} />}
-              {portfolioData.showFunFact && portfolioData.aboutFunFact && (
-                <p className="text-md italic text-muted-foreground border-l-4 border-accent pl-4 py-2 bg-accent/10 rounded-r-md">
-                  <Sparkles className="inline w-5 h-5 mr-2 text-accent" /> Fun Fact: {portfolioData.aboutFunFact}
-                </p>
-              )}
-            </div>
-          </section>
-        )}
-
-        {portfolioData.showAcademicSection && (
-          <section id="academic" className="mb-16 scroll-mt-20">
-            <div className="text-center mb-10">
-              <h2 className="text-4xl font-semibold text-primary inline-flex items-center">
-                <BookOpen className="w-10 h-10 mr-3" /> Academic Background
-              </h2>
-            </div>
-            <div className="bg-card text-card-foreground p-8 rounded-xl shadow-lg border border-border">
-              {portfolioData.showAcademic1 && portfolioData.academic1 && renderAcademicEntry(portfolioData.academic1, 1)}
-              {portfolioData.showAcademic2 && portfolioData.academic2 && renderAcademicEntry(portfolioData.academic2, 2)}
-            </div>
-          </section>
-        )}
-
-        {portfolioData.showProjectsSection && (
-          <section id="projects" className="mb-16 scroll-mt-20">
-            <div className="text-center mb-10">
-               <h2 className="text-4xl font-semibold text-primary inline-flex items-center">
-                <LayoutGrid className="w-10 h-10 mr-3" /> My Work
-              </h2>
-            </div>
-            <div className="grid md:grid-cols-2 gap-8">
-              ${project1TsxString}
-              ${project2TsxString}
-            </div>
-          </section>
-        )}
-
-        {portfolioData.showSkillsSection && (
-          <section id="skills" className="mb-16 scroll-mt-20">
-            <div className="text-center mb-10">
-              <h2 className="text-4xl font-semibold text-primary inline-flex items-center">
-                <Sparkles className="w-10 h-10 mr-3" /> Skills &amp; Technologies
-              </h2>
-            </div>
-            <div className="bg-card text-card-foreground p-8 rounded-xl shadow-lg border border-border">
-              {portfolioData.aboutSkills && <p className="text-lg mb-6 text-center" dangerouslySetInnerHTML={{ __html: (portfolioData.aboutSkills).replace(/\\n/g, '<br />') }} />}
-              {skillsArray.length > 0 && (
-                <ul className="flex flex-wrap justify-center gap-3">
-                  {skillsArray.map((skill, index) => (
-                    <li key={index} className="bg-accent text-accent-foreground px-4 py-2 rounded-full text-sm font-medium">
-                      {skill}
-                    </li>
-                  ))}
-                </ul>
-              )}
-            </div>
-          </section>
-        )}
-      </main>
-
-      {portfolioData.showContactSection && (
-        <footer id="contact" className="bg-muted text-muted-foreground py-10 text-center scroll-mt-20 border-t border-border">
-          <div className="container mx-auto px-6">
-             <div className="text-center mb-10">
-              <h2 className="text-4xl font-semibold text-primary inline-flex items-center">
-                <Mail className="w-10 h-10 mr-3" /> Get In Touch
-              </h2>
-            </div>
-            <div className="bg-card text-card-foreground p-8 rounded-xl shadow-lg border border-border text-center max-w-2xl mx-auto">
-              <p className="text-lg mb-6">I'm always open to discussing new projects, creative ideas or opportunities to be part of your visions.</p>
-              {portfolioData.contactEmail && (
-                <a href={'mailto:' + portfolioData.contactEmail} className="inline-block px-8 py-3 text-lg font-medium rounded-md bg-primary text-primary-foreground hover:bg-primary/90 transition-colors mb-8">
-                  Say Hello
-                </a>
-              )}
-              <div className="flex justify-center space-x-6">
-                {portfolioData.contactLinkedin && (
-                  <a href={portfolioData.contactLinkedin} target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" className="text-muted-foreground hover:text-primary transition-colors">
-                    <Linkedin size={28} />
-                  </a>
-                )}
-                {portfolioData.contactGithub && (
-                  <a href={portfolioData.contactGithub} target="_blank" rel="noopener noreferrer" aria-label="GitHub" className="text-muted-foreground hover:text-primary transition-colors">
-                    <Github size={28} />
-                  </a>
-                )}
-                {portfolioData.contactInstagram && (
-                  <a href={portfolioData.contactInstagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram" className="text-muted-foreground hover:text-primary transition-colors">
-                    <Instagram size={28} />
-                  </a>
-                )}
-              </div>
-               {portfolioData.showResumeLink && portfolioData.resumeUrl && (
-                <div className="mt-8">
-                  <a href={portfolioData.resumeUrl} target="_blank" rel="noopener noreferrer" className="inline-flex items-center justify-center px-6 py-3 text-md font-medium rounded-md border border-input bg-background hover:bg-accent hover:text-accent-foreground transition-colors">
-                    <Download className="w-5 h-5 mr-2" /> Download Resume
-                  </a>
-                </div>
-              )}
-            </div>
-            <p className="text-sm mt-10">&copy; {new Date().getFullYear()} {portfolioData.yourName}. All rights reserved.</p>
-            <p className="text-xs mt-1">Modern Portfolio Template</p>
-          </div>
-        </footer>
-      )}
-    </div>
-  );
-};
-
-export default function GeneratedPage() {
-  const rawDataString = '${escJsStr(JSON.stringify(data))}';
-  
   const defaultErrorProps: FormSchemaType = {
-    yourName: "Name (Error)",
-    heroTitle: "Title (Error)",
-    heroTagline: "Error loading tagline.",
-    heroCtaText: "View Work",
-    heroImagePlaceholder: "https://placehold.co/150x150.png?text=Error",
-    aboutBio: "Error loading biography.",
-    aboutSkills: "Error loading skills.",
-    aboutFunFact: "",
-    academic1: { qualification: "Degree 1 (Error)", institution: "University 1 (Error)" },
-    academic2: { qualification: "Degree 2 (Error)", institution: "University 2 (Error)" },
-    project1: undefined,
-    project2: undefined,
-    contactEmail: "error@example.com",
-    contactLinkedin: "",
-    contactGithub: "",
-    contactInstagram: "",
-    resumeUrl: "",
+    yourName: "Your Name",
+    heroTitle: "Creative Professional,Web Developer",
+    heroTagline: "Welcome to my portfolio. Explore my work and skills.",
+    heroCtaText: "Download CV",
+    heroImagePlaceholder: "https://placehold.co/350x350.png?text=Hero",
+    aboutBio: "A passionate individual dedicated to creating amazing digital experiences.",
+    aboutSkills: "JavaScript,React,Next.js,Node.js,HTML,CSS,Tailwind CSS",
+    aboutFunFact: "I can solve a Rubik's cube in under a minute!",
+    academicEntries: [{ qualification: "Degree in Computer Science", institution: "University of Tech", graduationYear: "202X", grades: "GPA: 3.8", description: "Focused on web development and AI.", imageUrl: "https://placehold.co/600x400.png?text=Education1" }],
+    projects: [{ name: "Project Alpha", description: "A cool project I built.", technologies: "React, Node.js", liveUrl: "#", repoUrl: "#", imageUrl: "https://placehold.co/400x250.png?text=Project1" }],
+    contactEmail: "your.email@example.com",
+    contactLinkedin: "https://linkedin.com/in/yourprofile",
+    contactGithub: "https://github.com/yourusername",
+    contactInstagram: "https://instagram.com/yourusername",
+    resumeUrl: "#",
     theme: "modern",
-    primaryColor: data.primaryColor || "#3B82F6",
-    backgroundColor: data.backgroundColor || "#F9FAFB",
-    accentColor: data.accentColor || "#10B981",
+    primaryColor: "#6366F1",
+    backgroundColor: "#111827",
+    accentColor: "#10B981",
     showAboutSection: true,
     showFunFact: true,
     showAcademicSection: true,
-    showAcademic1: true,
-    showAcademic2: false,
     showProjectsSection: true,
-    showProject1: false, 
-    showProject2: false,
     showSkillsSection: true,
     showContactSection: true,
     showResumeLink: true,
   };
+  
+  let fullTsx = "";
+  fullTsx += "// Generated Page: " + escJsStr(data.yourName) + "'s Modern Portfolio (Reference Adapted)\n";
+  fullTsx += "\"use client\";\n";
+  fullTsx += "import React, { useState, useEffect, useRef } from 'react';\n";
+  fullTsx += "import Head from 'next/head';\n";
+  fullTsx += "import Image from 'next/image';\n";
+  fullTsx += "import { HomeIcon, UserIcon, BriefcaseIcon, LayersIcon, MessageSquareIcon, DownloadIcon, CalendarIcon, LinkedinIcon, GithubIcon, InstagramIcon, MailIcon, PhoneIcon, MapPinIcon } from 'lucide-react';\n"; // Added PhoneIcon, MapPinIcon
+  fullTsx += "import type { FormSchemaType, AcademicEntryType, ProjectType } from '@/schemas/websiteFormSchema';\n";
+  fullTsx += "\n";
+  fullTsx += "declare var Typed: any; // For Typed.js\n";
+  fullTsx += "\n";
+  fullTsx += "const ModernPortfolioPage: React.FC<{ portfolioData: FormSchemaType }> = ({ portfolioData }) => {\n";
+  fullTsx += "  if (!portfolioData || typeof portfolioData.yourName === 'undefined') {\n";
+  fullTsx += "    return (\n";
+  fullTsx += "      <div style={{ padding: '20px', fontFamily: 'Arial, sans-serif', textAlign: 'center', color: 'red', backgroundColor: '#ffeeee' }}>\n";
+  fullTsx += "        <h1>Error: Portfolio Data Not Loaded</h1>\n";
+  fullTsx += "        <p>Essential data (like your name) is missing or malformed. Please check the form submission.</p>\n";
+  fullTsx += "      </div>\n";
+  fullTsx += "    );\n";
+  fullTsx += "  }\n";
+  fullTsx += "\n";
+  fullTsx += "  const {\n";
+  fullTsx += "    yourName,\n";
+  fullTsx += "    heroTitle,\n";
+  fullTsx += "    heroTagline,\n";
+  fullTsx += "    heroImagePlaceholder,\n";
+  fullTsx += "    resumeUrl,\n";
+  fullTsx += "    aboutBio,\n";
+  fullTsx += "    aboutSkills,\n";
+  fullTsx += "    contactEmail,\n";
+  fullTsx += "    contactLinkedin,\n";
+  fullTsx += "    contactGithub,\n";
+  fullTsx += "    contactInstagram,\n";
+  fullTsx += "    academicEntries = [],\n";
+  fullTsx += "    projects = [],\n";
+  fullTsx += "    primaryColor, // Not directly used for major theme colors here, accent & background are key\n";
+  fullTsx += "    backgroundColor,\n";
+  fullTsx += "    accentColor,\n";
+  fullTsx += "    showAboutSection,\n";
+  fullTsx += "    showAcademicSection,\n";
+  fullTsx += "    showProjectsSection,\n";
+  fullTsx += "    showSkillsSection,\n";
+  fullTsx += "    showContactSection,\n";
+  fullTsx += "    showResumeLink,\n";
+  fullTsx += "  } = portfolioData;\n";
+  fullTsx += "\n";
+  fullTsx += "  const [activeSection, setActiveSection] = useState(\"home\");\n";
+  fullTsx += "  const [isAsideOpen, setIsAsideOpen] = useState(false);\n";
+  fullTsx += "  const mainContentRef = useRef<HTMLDivElement>(null);\n";
+  fullTsx += "  const sectionRefs = useRef<Record<string, HTMLElement | null>>({});\n";
+  fullTsx += "  const typedHeroRef = useRef(null);\n";
+  fullTsx += "\n";
+  fullTsx += "  function getContrastColorForTsx(hexcolor: string | undefined): string {\n"; // Renamed for clarity within TSX
+  fullTsx += "    if (!hexcolor || !hexcolor.startsWith(\"#\")) return \"#FFFFFF\";\n";
+  fullTsx += "    let processedHex = hexcolor.slice(1);\n";
+  fullTsx += "    if (processedHex.length === 3) processedHex = processedHex.split(\"\").map(char => char + char).join(\"\");\n";
+  fullTsx += "    if (processedHex.length !== 6) return \"#FFFFFF\";\n";
+  fullTsx += "    try {\n";
+  fullTsx += "      const r = parseInt(processedHex.substring(0, 2), 16);\n";
+  fullTsx += "      const g = parseInt(processedHex.substring(2, 4), 16);\n";
+  fullTsx += "      const b = parseInt(processedHex.substring(4, 6), 16);\n";
+  fullTsx += "      const yiq = (r * 299 + g * 587 + b * 114) / 1000;\n";
+  fullTsx += "      return yiq >= 128 ? \"#000000\" : \"#FFFFFF\";\n";
+  fullTsx += "    } catch (e) { return \"#FFFFFF\"; }\n";
+  fullTsx += "  }\n";
+  fullTsx += "\n";
+  fullTsx += "  const calculatedForegroundColor = getContrastColorForTsx(backgroundColor);\n";
+  fullTsx += "  const isBgDark = calculatedForegroundColor === \"#FFFFFF\";\n";
+  fullTsx += "\n";
+  fullTsx += "  const css_skin_color = accentColor;\n";
+  fullTsx += "  const css_bg_black_900 = backgroundColor;\n"; // Main background
+  fullTsx += "  const css_text_black_900 = calculatedForegroundColor; // Main text color\n";
+  fullTsx += "\n";
+  // Derived shades based on the main background and text colors
+  fullTsx += "  const css_bg_black_100 = isBgDark ? 'color-mix(in srgb, ' + backgroundColor + ' 85%, #ffffff 15%)' : 'color-mix(in srgb, ' + backgroundColor + ' 95%, #000000 5%)';\n";
+  fullTsx += "  const css_bg_black_50 = isBgDark ? 'color-mix(in srgb, ' + backgroundColor + ' 70%, #ffffff 30%)' : 'color-mix(in srgb, ' + backgroundColor + ' 90%, #000000 10%)';\n";
+  fullTsx += "  const css_text_black_700 = isBgDark ? 'color-mix(in srgb, ' + calculatedForegroundColor + ' 85%, ' + backgroundColor + ' 15%)' : 'color-mix(in srgb, ' + calculatedForegroundColor + ' 70%, ' + backgroundColor + ' 30%)';\n";
+  fullTsx += "\n";
+  fullTsx += "  useEffect(() => {\n";
+  fullTsx += "    if (typeof Typed !== \"undefined\" && typedHeroRef.current && heroTitle && typeof heroTitle === 'string') {\n";
+  fullTsx += "      const titles = heroTitle.split(\",\").map(s => s.trim()).filter(s => s);\n";
+  fullTsx += "      const typedInstance = new Typed(typedHeroRef.current, {\n";
+  fullTsx += "        strings: titles.length > 0 ? titles : [\"Creative Professional\"],\n";
+  fullTsx += "        typeSpeed: 100,\n";
+  fullTsx += "        backSpeed: 60,\n";
+  fullTsx += "        loop: true,\n";
+  fullTsx += "      });\n";
+  fullTsx += "      return () => typedInstance.destroy();\n";
+  fullTsx += "    } else if (typeof Typed !== 'undefined' && typedHeroRef.current) {\n";
+  fullTsx += "        const typedInstance = new Typed(typedHeroRef.current, {\n";
+  fullTsx += "            strings: [\"Professional\"],\n";
+  fullTsx += "            typeSpeed: 100,\n";
+  fullTsx += "            backSpeed: 60,\n";
+  fullTsx += "            loop: true,\n";
+  fullTsx += "        });\n";
+  fullTsx += "        return () => typedInstance.destroy();\n";
+  fullTsx += "    }\n";
+  fullTsx += "  }, [heroTitle]);\n";
+  fullTsx += "\n";
+  fullTsx += "  const navLinks = [\n";
+  fullTsx += "    { id: \"home\", label: \"Home\", icon: HomeIcon, condition: true },\n";
+  fullTsx += "    { id: \"about\", label: \"About\", icon: UserIcon, condition: showAboutSection },\n";
+  fullTsx += "    { id: \"skills\", label: \"Skills\", icon: LayersIcon, condition: showSkillsSection },\n"; // Changed from Services
+  fullTsx += "    { id: \"projects\", label: \"Projects\", icon: BriefcaseIcon, condition: showProjectsSection },\n";
+  fullTsx += "    { id: \"contact\", label: \"Contact\", icon: MessageSquareIcon, condition: showContactSection },\n";
+  fullTsx += "  ];\n";
+  fullTsx += "\n";
+  fullTsx += "  const handleNavClick = (sectionId: string, e?: React.MouseEvent) => {\n";
+  fullTsx += "    e?.preventDefault();\n";
+  fullTsx += "    const sectionElement = sectionRefs.current[sectionId];\n";
+  fullTsx += "    if (sectionElement && mainContentRef.current) {\n";
+  fullTsx += "      mainContentRef.current.scrollTo({\n";
+  fullTsx += "        top: sectionElement.offsetTop - 0, // Adjust if fixed header\n";
+  fullTsx += "        behavior: \"smooth\",\n";
+  fullTsx += "      });\n";
+  fullTsx += "      setActiveSection(sectionId);\n";
+  fullTsx += "    }\n";
+  fullTsx += "    if (isAsideOpen && typeof window !== \"undefined\" && window.innerWidth < 1200) setIsAsideOpen(false);\n";
+  fullTsx += "  };\n";
+  fullTsx += "\n";
+  fullTsx += "  useEffect(() => {\n";
+  fullTsx += "    const currentMainContent = mainContentRef.current;\n";
+  fullTsx += "    const handleScroll = () => {\n";
+  fullTsx += "      if (!currentMainContent) return;\n";
+  fullTsx += "      let current = \"home\";\n"; // Default to home
+  fullTsx += "      const scrollPosition = currentMainContent.scrollTop;\n";
+  fullTsx += "      const viewportHeight = currentMainContent.clientHeight;\n";
+  fullTsx += "\n";
+  fullTsx += "      for (const link of navLinks.filter(l => l.condition)) {\n";
+  fullTsx += "        const section = sectionRefs.current[link.id];\n";
+  fullTsx += "        if (section) {\n";
+  // Section is considered active if its top is near the top of the scrollable area,
+  // or if a good portion of it is visible.
+  fullTsx += "          if (section.offsetTop <= scrollPosition + viewportHeight / 2 && section.offsetTop + section.offsetHeight > scrollPosition + viewportHeight / 3) {\n";
+  fullTsx += "            current = link.id;\n";
+  // No break, find the "lowest" active section for better accuracy when scrolling up
+  fullTsx += "          }\n";
+  fullTsx += "        }\n";
+  fullTsx += "      }\n";
+  fullTsx += "      if (currentMainContent.scrollTop < 100) current = \"home\"; // Prioritize home if at top\n";
+  fullTsx += "      setActiveSection(current);\n";
+  fullTsx += "    };\n";
+  fullTsx += "    currentMainContent?.addEventListener(\"scroll\", handleScroll, { passive: true });\n";
+  fullTsx += "    if (currentMainContent?.scrollTop === 0) setActiveSection(\"home\"); // Initial active section\n";
+  fullTsx += "    return () => currentMainContent?.removeEventListener(\"scroll\", handleScroll);\n";
+  fullTsx += "  }, [navLinks, sectionRefs, mainContentRef]); // Added dependencies\n";
+  fullTsx += "\n";
+  fullTsx += "  const skillsList = aboutSkills ? aboutSkills.split(\",\").map(s => s.trim()).filter(s => s) : [];\n";
+  fullTsx += "\n";
+  fullTsx += "  const renderAcademicEntry = (entry: AcademicEntryType | undefined, index: number) => {\n";
+  fullTsx += "    if (!entry || !entry.qualification) return null;\n";
+  fullTsx += "    return (\n";
+  fullTsx += "      <div key={`academic-${index}`} className=\"timeline-item relative pb-[50px] pl-[37px] last:pb-0 before:absolute before:left-[7px] before:top-0 before:h-full before:w-[1px] before:bg-[var(--preview-skin-color)]\">\\n";
+  fullTsx += "        <div className=\"circle-dot absolute left-0 top-0 h-[15px] w-[15px] rounded-full bg-[var(--preview-skin-color)]\"></div>\\n";
+  fullTsx += "        <h3 className=\"timeline-date mb-3 text-sm font-normal text-[color:var(--preview-text-black-700)]\"><CalendarIcon className=\"mr-1.5 inline-block h-4 w-4\" />{entry.graduationYear}</h3>\\n";
+  fullTsx += "        <h4 className=\"timeline-title mb-[15px] text-lg font-bold capitalize text-[color:var(--preview-text-black-900)]\">{entry.qualification} - {entry.institution}</h4>\\n";
+  fullTsx += "        {entry.grades && <p className=\"text-xs italic mb-2 text-[color:var(--preview-text-black-700)]\">Grades: {entry.grades}</p>}\\n";
+  fullTsx += "        {entry.description && <p className=\"timeline-text text-justify text-base leading-relaxed text-[color:var(--preview-text-black-700)]\" dangerouslySetInnerHTML={{ __html: (entry.description || '').replace(/\\n/g, \"<br/>\") }}/>}\\n";
+  fullTsx += "      </div>\\n";
+  fullTsx += "    );\n";
+  fullTsx += "  };\n";
+  fullTsx += "\n";
+  fullTsx += "  const renderProjectCard = (project: ProjectType | undefined, index: number) => {\n";
+  fullTsx += "    if (!project || !project.name) return null;\n";
+  fullTsx += "    return (\n";
+  fullTsx += "      <div key={`project-${index}`} className=\"portfolio-item basis-full px-[15px] pb-[30px] sm:basis-1/2 md:basis-1/3\">\\n";
+  fullTsx += "        <div className=\"portfolio-item-inner cursor-pointer overflow-hidden rounded-xl border-[6px]\" style={{borderColor: \"var(--preview-bg-black-100)\"}}>\\n";
+  fullTsx += "          <div className=\"portfolio-img\">\\n";
+  fullTsx += "            <Image src={project.imageUrl || \"https://placehold.co/400x250.png?text=Project\"} alt={project.name} width={400} height={250} className=\"block w-full h-[200px] object-cover\" data-ai-hint=\"project app modern theme\"/>\\n";
+  fullTsx += "          </div>\\n";
+  fullTsx += "        </div>\\n";
+  fullTsx += "        <h4 className=\"mt-2 text-center text-lg font-semibold capitalize text-[color:var(--preview-text-black-900)]\">{project.name}</h4>\\n";
+  fullTsx += "        {project.description && <p className=\"text-center text-sm text-[color:var(--preview-text-black-700)]\" dangerouslySetInnerHTML={{ __html: (project.description || '').replace(/\\n/g, \"<br/>\") }}/>}\\n";
+  fullTsx += "         {(project.liveUrl || project.repoUrl) && (\\n";
+  fullTsx += "          <div className=\"mt-2 flex justify-center gap-2\">\\n";
+  fullTsx += "            {project.liveUrl && <a href={project.liveUrl} target=\"_blank\" rel=\"noopener noreferrer\" className=\"text-xs px-3 py-1 rounded\" style={{backgroundColor: \"var(--preview-skin-color)\", color: getContrastColorForTsx(accentColor)}}>Live</a>}\\n";
+  fullTsx += "            {project.repoUrl && <a href={project.repoUrl} target=\"_blank\" rel=\"noopener noreferrer\" className=\"text-xs px-3 py-1 rounded border\" style={{borderColor: \"var(--preview-skin-color)\", color: \"var(--preview-skin-color)\"}}>Code</a>}\\n";
+  fullTsx += "          </div>\\n";
+  fullTsx += "        )}\\n";
+  fullTsx += "      </div>\\n";
+  fullTsx += "    );\n";
+  fullTsx += "  };\n";
+  fullTsx += "\n";
+  fullTsx += "  const skillItemHoverContrastColor = getContrastColorForTsx(accentColor);\n";
+  fullTsx += "\n";
+  fullTsx += "  return (\n";
+  fullTsx += "    <>\n";
+  fullTsx += "      <Head>\n";
+  fullTsx += "        <title>{yourName} - Modern Portfolio</title>\n";
+  fullTsx += "        <link rel=\"preconnect\" href=\"https://fonts.googleapis.com\" />\n";
+  fullTsx += "        <link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossOrigin=\"anonymous\" />\n";
+  fullTsx += "        <link href=\"https://fonts.googleapis.com/css2?family=Clicker+Script&family=Poppins:wght@200;300;400;500;600;700&display=swap\" rel=\"stylesheet\" />\n";
+  fullTsx += "        <script src=\"https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js\" referrerPolicy=\"no-referrer\" async></script>\n";
+  fullTsx += "      </Head>\n";
+  fullTsx += "\n";
+  fullTsx += "      {/* This style block defines the CSS variables based on dynamic data */}\n";
+  fullTsx += "      <style jsx global>{`\n";
+  fullTsx += "        :root {\n"; // Use :root or a specific wrapper class if this page is part of a larger app
+  fullTsx += "          --preview-skin-color: ${css_skin_color};\n";
+  fullTsx += "          --preview-bg-black-900: ${css_bg_black_900};\n";
+  fullTsx += "          --preview-bg-black-100: ${css_bg_black_100};\n";
+  fullTsx += "          --preview-bg-black-50: ${css_bg_black_50};\n";
+  fullTsx += "          --preview-text-black-900: ${css_text_black_900};\n";
+  fullTsx += "          --preview-text-black-700: ${css_text_black_700};\n";
+  fullTsx += "        }\n";
+  fullTsx += "        .font-poppins { font-family: 'Poppins', sans-serif; }\n";
+  fullTsx += "        .font-clicker { font-family: 'Clicker Script', cursive; }\n";
+  // Basic CSS reset and utility classes based on reference will be applied via Tailwind or global styles
+  fullTsx += "      `}</style>\n";
+  fullTsx += "\n";
+  fullTsx += "      <div className={`min-h-screen font-poppins text-base ${isBgDark ? \"dark-mode-vars-applied\" : \"light-mode-vars-applied\"}`} style={{backgroundColor: 'var(--preview-bg-black-900)', color: 'var(--preview-text-black-900)'}}>\\n";
+  fullTsx += "        <div className={`aside fixed left-0 top-0 z-20 h-full w-[270px] border-r p-[30px] transition-transform duration-300 ease-in-out md:flex md:flex-col md:items-center md:justify-center ${isAsideOpen ? \"translate-x-0\" : \"-translate-x-full\"} md:translate-x-0`} style={{ background: \"var(--preview-bg-black-100)\", borderColor: \"var(--preview-bg-black-50)\" }}>\\n";
+  // Aside content (Nav)
+  fullTsx += "          <ul className=\"nav mt-[50px] list-none md:mt-0\">\\n";
+  fullTsx += "            {navLinks.filter(link => link.condition).map(link => (\\n";
+  fullTsx += "              <li key={link.id} className=\"mb-5 block\">\\n";
+  fullTsx += "                <a \\n";
+  fullTsx += "                  href={`#${link.id}`}\\n";
+  fullTsx += "                  onClick={(e) => handleNavClick(link.id, e)} \\n";
+  fullTsx += "                  className={`block border-b py-[5px] px-[15px] text-base font-semibold transition-colors duration-300 ${activeSection === link.id ? \"text-[color:var(--preview-skin-color)]\" : \"text-[color:var(--preview-text-black-900)] hover:text-[color:var(--preview-skin-color)]\"}`}\\n";
+  fullTsx += "                  style={{ borderColor: \"var(--preview-bg-black-50)\" }}\\n";
+  fullTsx += "                >\\n";
+  fullTsx += "                  <link.icon className=\"mr-[15px] inline-block h-5 w-5\" /> {link.label}\\n";
+  fullTsx += "                </a>\\n";
+  fullTsx += "              </li>\\n";
+  fullTsx += "            ))}\\n";
+  fullTsx += "          </ul>\\n";
+  fullTsx += "        </div>\\n";
+  fullTsx += "\n";
+  fullTsx += "        <button \\n";
+  fullTsx += "          className={`nav-toggler fixed top-5 z-30 h-10 w-[45px] cursor-pointer rounded border bg-transparent p-0 text-center md:hidden transition-all duration-300 ease-in-out ${isAsideOpen ? \"left-[285px]\" : \"left-[15px]\"}`}\\n";
+  fullTsx += "          style={{ background: \"var(--preview-bg-black-100)\", borderColor: \"var(--preview-bg-black-50)\" }}\\n";
+  fullTsx += "          onClick={() => setIsAsideOpen(!isAsideOpen)}\\n";
+  fullTsx += "          aria-label=\"Toggle navigation\"\\n";
+  fullTsx += "        >\\n";
+  fullTsx += "          <span className={`relative inline-block h-0.5 w-[18px] bg-[var(--preview-skin-color)] transition-all duration-300 before:absolute before:left-0 before:top-[-6px] before:h-0.5 before:w-full before:bg-[var(--preview-skin-color)] before:transition-all before:duration-300 after:absolute after:left-0 after:top-[6px] after:h-0.5 after:w-full after:bg-[var(--preview-skin-color)] after:transition-all after:duration-300 ${isAsideOpen ? \"bg-transparent before:top-0 before:rotate-45 after:top-0 after:-rotate-45\" : \"\"}`}></span>\\n";
+  fullTsx += "        </button>\\n";
+  fullTsx += "\n";
+  fullTsx += "        <div ref={mainContentRef} className=\"main-content min-h-screen bg-transparent md:pl-[270px] fixed top-0 right-0 bottom-0 left-0 md:left-auto overflow-x-hidden overflow-y-auto transition-all duration-300 ease-in-out scroll-smooth\" style={{ background: \"var(--preview-bg-black-900)\"}}>\\n";
+  // Home Section
+  fullTsx += "          <section ref={el => sectionRefs.current[\"home\"] = el} id=\"home\" className=\"section flex min-h-screen items-center px-[15px] py-[60px] md:px-[30px] text-[color:var(--preview-text-black-900)]\">\\n";
+  fullTsx += "            <div className=\"container mx-auto w-full max-w-[1100px]\">\\n";
+  fullTsx += "              <div className=\"row -mx-[15px] flex flex-wrap items-center\">\\n";
+  fullTsx += "                <div className=\"home-info basis-full px-[15px] md:basis-3/5 md:max-w-[60%]\">\\n";
+  fullTsx += "                  <h3 className=\"hello my-[15px] text-[28px]\">Hello, my name is <span className=\"name font-clicker text-3xl font-bold text-[color:var(--preview-skin-color)]\">{yourName}</span></h3>\\n";
+  fullTsx += "                  <h3 className=\"my-profession my-[15px] text-3xl\">I&apos;m a <span ref={typedHeroRef} className=\"typing text-[color:var(--preview-skin-color)]\"></span></h3>\\n";
+  fullTsx += "                  {heroTagline && <p className=\"mb-[40px] text-xl leading-relaxed text-[color:var(--preview-text-black-700)]\" dangerouslySetInnerHTML={{ __html: (heroTagline || '').replace(/\\n/g, \"<br/>\") }} />}\\n";
+  fullTsx += "                  {showResumeLink && resumeUrl && (\\n";
+  fullTsx += "                    <a href={resumeUrl} target=\"_blank\" rel=\"noopener noreferrer\" className=\"btn inline-block whitespace-nowrap rounded-[40px] border-none bg-[var(--preview-skin-color)] py-3 px-9 text-base font-medium text-white transition-all duration-300 hover:scale-105\">\\n";
+  fullTsx += "                      Download CV\\n";
+  fullTsx += "                    </a>\\n";
+  fullTsx += "                  )}\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "                {heroImagePlaceholder && (\\n";
+  fullTsx += "                  <div className=\"home-img relative basis-full px-[15px] text-center md:basis-2/5 md:max-w-[40%] mt-10 md:mt-0 \\n";
+  fullTsx += "                    before:absolute before:left-5 before:top-[-40px] before:h-20 before:w-20 before:border-l-[10px] before:border-t-[10px] before:border-[var(--preview-skin-color)]\\n";
+  fullTsx += "                    after:absolute after:right-5 after:bottom-[-40px] after:h-20 after:w-20 after:border-r-[10px] after:border-b-[10px] after:border-[var(--preview-skin-color)]\">\\n";
+  fullTsx += "                    <Image src={heroImagePlaceholder} alt={yourName || \"Hero Image\"} width={350} height={350} className=\"mx-auto h-[350px] w-auto rounded-md object-cover\" data-ai-hint=\"professional portrait modern theme\" priority/>\\n";
+  fullTsx += "                  </div>\\n";
+  fullTsx += "                )}\\n";
+  fullTsx += "              </div>\\n";
+  fullTsx += "            </div>\\n";
+  fullTsx += "          </section>\\n";
+  fullTsx += "\n";
+  // About Section
+  fullTsx += "          {showAboutSection && (\\n";
+  fullTsx += "            <section ref={el => sectionRefs.current[\"about\"] = el} id=\"about\" className=\"section py-[60px] px-[15px] md:px-[30px]\" style={{background: \"var(--preview-bg-black-900)\"}}>\\n";
+  fullTsx += "              <div className=\"container mx-auto w-full max-w-[1100px]\">\\n";
+  fullTsx += "                <div className=\"row -mx-[15px] flex flex-wrap\">\\n";
+  fullTsx += "                  <div className=\"section-title basis-full max-w-full px-[15px] mb-[60px]\">\\n";
+  fullTsx += "                    <h2 className=\"relative text-4xl font-bold text-[color:var(--preview-text-black-900)]\">\\n";
+  fullTsx += "                      About Me\\n";
+  fullTsx += "                      <span className=\"before:absolute before:left-0 before:top-full before:h-1 before:w-[50px] before:bg-[var(--preview-skin-color)]\"></span>\\n";
+  fullTsx += "                      <span className=\"after:absolute after:left-0 after:top-full after:mt-2 after:h-1 after:w-[25px] after:bg-[var(--preview-skin-color)]\"></span>\\n";
+  fullTsx += "                    </h2>\\n";
+  fullTsx += "                  </div>\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "                <div className=\"row -mx-[15px] flex flex-wrap\">\\n";
+  fullTsx += "                  <div className=\"about-content basis-full max-w-full px-[15px]\">\\n";
+  fullTsx += "                    <div className=\"row -mx-[15px] flex flex-wrap\">\\n";
+  fullTsx += "                      <div className=\"about-text basis-full max-w-full px-[15px]\">\\n";
+  fullTsx += "                        <h3 className=\"mb-[15px] text-2xl font-semibold text-[color:var(--preview-text-black-900)]\">I&apos;m {yourName} and <span className=\"text-[color:var(--preview-skin-color)]\">{heroTitle ? heroTitle.split(\",\")[0].trim() : \"a Professional\"}</span></h3>\\n";
+  fullTsx += "                        {aboutBio && <p className=\"text-base leading-relaxed text-[color:var(--preview-text-black-700)]\" dangerouslySetInnerHTML={{ __html: (aboutBio || '').replace(/\\n/g, \"<br/>\") }}/>}\\n";
+  fullTsx += "                      </div>\\n";
+  fullTsx += "                    </div>\\n";
+  fullTsx += "                    {showAcademicSection && academicEntries && academicEntries.filter(entry => entry && entry.qualification).length > 0 && (\\n";
+  fullTsx += "                      <div className=\"row -mx-[15px] flex flex-wrap\">\\n";
+  fullTsx += "                        <div className=\"education basis-full px-[15px] pt-[30px] md:basis-1/2 md:max-w-[50%]\">\\n";
+  fullTsx += "                          <h3 className=\"title mb-[30px] text-2xl font-semibold text-[color:var(--preview-text-black-900)]\">Education</h3>\\n";
+  fullTsx += "                          <div className=\"timeline-box basis-full max-w-full\">\\n";
+  fullTsx += "                            <div className=\"timeline relative w-full rounded-xl border p-[30px_15px]\" style={{background: \"var(--preview-bg-black-100)\", borderColor: \"var(--preview-bg-black-50)\"}}>\\n";
+  fullTsx += "                              {academicEntries.filter(entry => entry && entry.qualification).map((entry, index) => renderAcademicEntry(entry, index))}\\n";
+  fullTsx += "                            </div>\\n";
+  fullTsx += "                          </div>\\n";
+  fullTsx += "                        </div>\\n";
+  // Experience Column (Conceptual - could map projects here if desired)
+  // For now, keeping Education and Experience separate as in the original reference's structure.
+  // If projects are to be experience, this would be:
+  // <div className="experience basis-full px-[15px] pt-[30px] md:basis-1/2 md:max-w-[50%]"> ... map projects ... </div>
+  fullTsx += "                      </div>\\n";
+  fullTsx += "                    )}\\n";
+  fullTsx += "                  </div>\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "              </div>\\n";
+  fullTsx += "            </section>\\n";
+  fullTsx += "          )}\\n";
+  fullTsx += "\n";
+  // Skills Section (replaces Services)
+  fullTsx += "          {showSkillsSection && skillsList.length > 0 && (\\n";
+  fullTsx += "             <section ref={el => sectionRefs.current[\"skills\"] = el} id=\"skills\" className=\"section skills py-[60px] px-[15px] md:px-[30px]\" style={{background: \"var(--preview-bg-black-900)\"}}>\\n";
+  fullTsx += "              <div className=\"container mx-auto w-full max-w-[1100px]\">\\n";
+  fullTsx += "                <div className=\"row -mx-[15px] flex flex-wrap\">\\n";
+  fullTsx += "                   <div className=\"section-title basis-full max-w-full px-[15px] mb-[60px]\">\\n";
+  fullTsx += "                    <h2 className=\"relative text-4xl font-bold text-[color:var(--preview-text-black-900)]\">\\n";
+  fullTsx += "                      My Skills\\n";
+  fullTsx += "                      <span className=\"before:absolute before:left-0 before:top-full before:h-1 before:w-[50px] before:bg-[var(--preview-skin-color)]\"></span>\\n";
+  fullTsx += "                      <span className=\"after:absolute after:left-0 after:top-full after:mt-2 after:h-1 after:w-[25px] after:bg-[var(--preview-skin-color)]\"></span>\\n";
+  fullTsx += "                    </h2>\\n";
+  fullTsx += "                  </div>\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "                <div className=\"row -mx-[15px] flex flex-wrap justify-center items-center gap-4 md:gap-6\">\\n"; // Flexbox layout for skills
+  fullTsx += "                  {skillsList.map((skill, index) => (\\n";
+  fullTsx += "                    <div key={`skill-${index}`} className=\"service-item group px-[15px] pb-[30px]\">\\n"; // Each skill item
+  fullTsx += "                      <div className=\"service-item-inner w-[200px] h-[180px] flex flex-col justify-center items-center rounded-xl border p-[20px_15px] text-center transition-all duration-300 group-hover:bg-[var(--preview-skin-color)]\" style={{background: \"var(--preview-bg-black-100)\", borderColor: \"var(--preview-bg-black-50)\"}}>\\n";
+  fullTsx += "                        <div className=\"icon mx-auto mb-[20px] block h-[50px] w-[50px] rounded-full text-center transition-all duration-300 flex items-center justify-center\">\\n";
+  fullTsx += "                          <LayersIcon className=\"text-3xl text-[var(--preview-skin-color)] transition-all duration-300 group-hover:text-2xl group-hover:text-[color:${skillItemHoverContrastColor}]\"/>\\n";
+  fullTsx += "                        </div>\\n";
+  fullTsx += "                        <h4 className=\"mb-[10px] text-md font-semibold capitalize text-[color:var(--preview-text-black-900)] group-hover:text-[color:${skillItemHoverContrastColor}]\">{skill}</h4>\\n";
+  fullTsx += "                      </div>\\n";
+  fullTsx += "                    </div>\\n";
+  fullTsx += "                  ))}\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "              </div>\\n";
+  fullTsx += "            </section>\\n";
+  fullTsx += "          )}\\n";
+  fullTsx += "          \\n";
+  // Projects Section (replaces Portfolio)
+  fullTsx += "          {showProjectsSection && projects && projects.filter(p => p && p.name).length > 0 && (\\n";
+  fullTsx += "            <section ref={el => sectionRefs.current[\"projects\"] = el} id=\"projects\" className=\"section portfolio py-[60px] px-[15px] md:px-[30px]\" style={{background: \"var(--preview-bg-black-900)\"}}>\\n";
+  fullTsx += "              <div className=\"container mx-auto w-full max-w-[1100px]\">\\n";
+  fullTsx += "                <div className=\"row -mx-[15px] flex flex-wrap\">\\n";
+  fullTsx += "                  <div className=\"section-title basis-full max-w-full px-[15px] mb-[60px]\">\\n";
+  fullTsx += "                    <h2 className=\"relative text-4xl font-bold text-[color:var(--preview-text-black-900)]\">\\n";
+  fullTsx += "                      My Projects\\n";
+  fullTsx += "                       <span className=\"before:absolute before:left-0 before:top-full before:h-1 before:w-[50px] before:bg-[var(--preview-skin-color)]\"></span>\\n";
+  fullTsx += "                       <span className=\"after:absolute after:left-0 after:top-full after:mt-2 after:h-1 after:w-[25px] after:bg-[var(--preview-skin-color)]\"></span>\\n";
+  fullTsx += "                    </h2>\\n";
+  fullTsx += "                  </div>\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "                <div className=\"row -mx-[15px] flex flex-wrap\">\\n";
+  fullTsx += "                  <div className=\"portfolio-heading basis-full max-w-full px-[15px] mb-10\">\\n";
+  fullTsx += "                    <h2 className=\"font-medium text-[color:var(--preview-text-black-900)]\">Selected Projects:</h2>\\n";
+  fullTsx += "                  </div>\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "                <div className=\"row -mx-[15px] flex flex-wrap justify-center\">\\n"; // Changed to justify-center
+  fullTsx += "                  {projects.filter(p => p && p.name).map((project, index) => renderProjectCard(project, index))}\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "              </div>\\n";
+  fullTsx += "            </section>\\n";
+  fullTsx += "          )}\\n";
+  fullTsx += "\\n";
+  // Contact Section (Footer)
+  fullTsx += "          {showContactSection && (\\n";
+  fullTsx += "            <footer ref={el => sectionRefs.current[\"contact\"] = el} id=\"contact\" className=\"section contact py-[60px] px-[15px] md:px-[30px]\" style={{background: \"var(--preview-bg-black-900)\"}}>\\n";
+  fullTsx += "              <div className=\"container mx-auto w-full max-w-[1100px]\">\\n";
+  fullTsx += "                <div className=\"row -mx-[15px] flex flex-wrap\">\\n";
+  fullTsx += "                  <div className=\"section-title basis-full max-w-full px-[15px] mb-[60px]\">\\n";
+  fullTsx += "                    <h2 className=\"relative text-4xl font-bold text-[color:var(--preview-text-black-900)]\">\\n";
+  fullTsx += "                      Contact Me\\n";
+  fullTsx += "                      <span className=\"before:absolute before:left-0 before:top-full before:h-1 before:w-[50px] before:bg-[var(--preview-skin-color)]\"></span>\\n";
+  fullTsx += "                      <span className=\"after:absolute after:left-0 after:top-full after:mt-2 after:h-1 after:w-[25px] after:bg-[var(--preview-skin-color)]\"></span>\\n";
+  fullTsx += "                    </h2>\\n";
+  fullTsx += "                  </div>\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "                <div className=\"row -mx-[15px] flex flex-wrap justify-center\">\\n"; // Centering contact items
+  fullTsx += "                  {contactEmail && (\\n";
+  fullTsx += "                    <div className=\"contact-info-item basis-full px-[15px] pb-[30px] text-center sm:basis-1/2 md:basis-1/4\">\\n";
+  fullTsx += "                      <div className=\"icon inline-block\"><MailIcon className=\"text-2xl text-[var(--preview-skin-color)]\"/></div>\\n";
+  fullTsx += "                      <h4 className=\"my-[15px] text-lg font-semibold capitalize text-[color:var(--preview-text-black-900)]\">Email</h4>\\n";
+  fullTsx += "                      <p className=\"break-all text-base font-normal leading-relaxed text-[color:var(--preview-text-black-700)]\">{contactEmail}</p>\\n";
+  fullTsx += "                    </div>\\n";
+  fullTsx += "                  )}\\n";
+  fullTsx += "                  {contactLinkedin && (\\n";
+  fullTsx += "                    <div className=\"contact-info-item basis-full px-[15px] pb-[30px] text-center sm:basis-1/2 md:basis-1/4\">\\n";
+  fullTsx += "                      <div className=\"icon inline-block\"><LinkedinIcon className=\"text-2xl text-[var(--preview-skin-color)]\"/></div>\\n";
+  fullTsx += "                      <h4 className=\"my-[15px] text-lg font-semibold capitalize text-[color:var(--preview-text-black-900)]\">LinkedIn</h4>\\n";
+  fullTsx += "                      <a href={contactLinkedin} target=\"_blank\" rel=\"noopener noreferrer\" className=\"text-base font-normal leading-relaxed hover:text-[var(--preview-skin-color)] text-[color:var(--preview-text-black-700)]\">Profile</a>\\n";
+  fullTsx += "                    </div>\\n";
+  fullTsx += "                  )}\\n";
+  fullTsx += "                   {contactGithub && (\\n";
+  fullTsx += "                    <div className=\"contact-info-item basis-full px-[15px] pb-[30px] text-center sm:basis-1/2 md:basis-1/4\">\\n";
+  fullTsx += "                      <div className=\"icon inline-block\"><GithubIcon className=\"text-2xl text-[var(--preview-skin-color)]\"/></div>\\n";
+  fullTsx += "                      <h4 className=\"my-[15px] text-lg font-semibold capitalize text-[color:var(--preview-text-black-900)]\">GitHub</h4>\\n";
+  fullTsx += "                      <a href={contactGithub} target=\"_blank\" rel=\"noopener noreferrer\" className=\"text-base font-normal leading-relaxed hover:text-[var(--preview-skin-color)] text-[color:var(--preview-text-black-700)]\">Profile</a>\\n";
+  fullTsx += "                    </div>\\n";
+  fullTsx += "                  )}\\n";
+  fullTsx += "                  {contactInstagram && (\\n";
+  fullTsx += "                    <div className=\"contact-info-item basis-full px-[15px] pb-[30px] text-center sm:basis-1/2 md:basis-1/4\">\\n";
+  fullTsx += "                      <div className=\"icon inline-block\"><InstagramIcon className=\"text-2xl text-[var(--preview-skin-color)]\"/></div>\\n";
+  fullTsx += "                      <h4 className=\"my-[15px] text-lg font-semibold capitalize text-[color:var(--preview-text-black-900)]\">Instagram</h4>\\n";
+  fullTsx += "                      <a href={contactInstagram} target=\"_blank\" rel=\"noopener noreferrer\" className=\"text-base font-normal leading-relaxed hover:text-[var(--preview-skin-color)] text-[color:var(--preview-text-black-700)]\">Profile</a>\\n";
+  fullTsx += "                    </div>\\n";
+  fullTsx += "                  )}\\n";
+  fullTsx += "                </div>\\n";
+  fullTsx += "                <p className=\"text-center text-sm text-[color:var(--preview-text-black-700)]\">&copy; {new Date().getFullYear()} {yourName}. All Rights Reserved.</p>\\n";
+  fullTsx += "              </div>\\n";
+  fullTsx += "            </footer>\\n";
+  fullTsx += "          )}\\n";
+  fullTsx += "        </div>\\n"; // End main-content
+  fullTsx += "      </div>\\n"; // End main div wrapper
+  fullTsx += "    </>\n";
+  fullTsx += "  );\n";
+  fullTsx += "};\n";
+  fullTsx += "\n";
+  fullTsx += "export default function GeneratedPage() {\n";
+  fullTsx += "  const rawDataString = '" + escJsStr(JSON.stringify(data)) + "';\n";
+  fullTsx += "  const defaultErrorPropsModern: FormSchemaType = " + JSON.stringify(defaultErrorProps) + ";\n";
+  fullTsx += "  let propsToPass: FormSchemaType;\n";
+  fullTsx += "  try {\n";
+  fullTsx += "    const parsed = JSON.parse(rawDataString);\n";
+  fullTsx += "    if (typeof parsed === 'object' && parsed !== null) {\n";
+  fullTsx += "      propsToPass = { ...defaultErrorPropsModern, ...parsed };\n";
+  fullTsx += "      propsToPass.academicEntries = Array.isArray(parsed.academicEntries) ? parsed.academicEntries.map((entry: any) => ({...(defaultErrorPropsModern.academicEntries.length > 0 ? defaultErrorPropsModern.academicEntries[0] : {}), ...entry})) : defaultErrorPropsModern.academicEntries;\n";
+  fullTsx += "      propsToPass.projects = Array.isArray(parsed.projects) ? parsed.projects.map((project: any) => ({...(defaultErrorPropsModern.projects.length > 0 ? defaultErrorPropsModern.projects[0] : {}), ...project})) : defaultErrorPropsModern.projects;\n";
+  fullTsx += "    } else {\n";
+  fullTsx += "      propsToPass = defaultErrorPropsModern;\n";
+  fullTsx += "    }\n";
+  fullTsx += "  } catch (e) {\n";
+  fullTsx += "    console.error(\"Error parsing props in Modern Template GeneratedPage:\", e, \"\\\\nRaw data was:\", rawDataString);\n";
+  fullTsx += "    propsToPass = defaultErrorPropsModern;\n";
+  fullTsx += "  }\n";
+  fullTsx += "  return <ModernPortfolioPage portfolioData={propsToPass} />;\n";
+  fullTsx += "}\n";
 
-  let propsToPass: FormSchemaType;
-  try {
-    const parsed = JSON.parse(rawDataString);
-    if (typeof parsed === 'object' && parsed !== null && typeof parsed.yourName !== 'undefined') {
-      propsToPass = parsed;
-    } else {
-      console.error("${siteNameClean} Template: Parsed data is not a valid object or missing key fields. Raw: ", rawDataString);
-      propsToPass = defaultErrorProps;
-    }
-  } catch (e) {
-    console.error("Error parsing props in ${siteNameClean}Template GeneratedPage:", e, "\\nRaw data string was:", rawDataString);
-    propsToPass = defaultErrorProps;
+  // --- PREVIEW HTML ---
+  const previewForegroundColor = getContrastColor(data.backgroundColor);
+  const isPreviewBgDark = previewForegroundColor === '#FFFFFF';
+
+  const var_skin_color_preview = escCssVal(data.accentColor);
+  const var_bg_black_900_preview = escCssVal(data.backgroundColor);
+  const var_text_black_900_preview = escCssVal(previewForegroundColor);
+
+  let var_bg_black_100_preview: string;
+  let var_bg_black_50_preview: string;
+  let var_text_black_700_preview: string;
+
+  if (isPreviewBgDark) {
+    var_bg_black_100_preview = escCssVal(`color-mix(in srgb, ${data.backgroundColor} 85%, #ffffff 15%)`);
+    var_bg_black_50_preview = escCssVal(`color-mix(in srgb, ${data.backgroundColor} 70%, #ffffff 30%)`);
+    var_text_black_700_preview = escCssVal(`color-mix(in srgb, ${previewForegroundColor} 85%, ${data.backgroundColor} 15%)`);
+  } else {
+    var_bg_black_100_preview = escCssVal(`color-mix(in srgb, ${data.backgroundColor} 95%, #000000 5%)`);
+    var_bg_black_50_preview = escCssVal(`color-mix(in srgb, ${data.backgroundColor} 90%, #000000 10%)`);
+    var_text_black_700_preview = escCssVal(`color-mix(in srgb, ${previewForegroundColor} 70%, ${data.backgroundColor} 30%)`);
   }
-  return <${siteNameClean}PortfolioPage portfolioData={propsToPass} />;
+
+  let inlineStyles = "";
+  inlineStyles += ":root {\n";
+  inlineStyles += "  --skin-color: " + var_skin_color_preview + " !important;\n";
+  inlineStyles += "  --bg-black-900: " + var_bg_black_900_preview + " !important;\n";
+  inlineStyles += "  --bg-black-100: " + var_bg_black_100_preview + " !important;\n";
+  inlineStyles += "  --bg-black-50: " + var_bg_black_50_preview + " !important;\n";
+  inlineStyles += "  --text-black-900: " + var_text_black_900_preview + " !important;\n";
+  inlineStyles += "  --text-black-700: " + var_text_black_700_preview + " !important;\n";
+  inlineStyles += "}\n";
+  
+  // CSS content from references/css/style.css
+  const baseCssFromReference = `
+/* Copied from references/css/style.css - adapted for preview */
+@import url("https://fonts.googleapis.com/css2?family=Clicker+Script&family=Poppins:wght@200;300;400;500;600;700&display=swap");
+/* :root variables will be overridden by the injected ones above */
+:root { --skin-color: #ec1839; --bg-black-900: #f2f2fc; --bg-black-100: #fdf9ff; --bg-black-50: #e8dfec; --text-black-900: #302e4d; --text-black-700: #504e70;}
+body.dark-preview-mode { --skin-color: ${var_skin_color_preview} !important; --bg-black-900: ${var_bg_black_900_preview} !important; --bg-black-100: #222222 !important; --bg-black-50: #393939 !important; --text-black-900: #ffffff !important; --text-black-700: #e9e9e9 !important; }
+* { margin: 0; padding: 0; outline: none; text-decoration: none; box-sizing: border-box; }
+body { line-height: 1.5; font-size: 16px; font-family: "Poppins", sans-serif; background: var(--bg-black-900); color: var(--text-black-900); overflow-x:hidden;}
+::before, ::after { box-sizing: border-box; }
+ul { list-style: none; }
+.section-preview-modern { padding: 0 15px; opacity: 1; position:absolute; left:0; top:0; right:0; bottom:0; overflow-y:auto; overflow-x:hidden; background: var(--bg-black-900); z-index:1;}
+@media (min-width:768px) {.section-preview-modern {padding:0 30px;}}
+.section-preview-modern.active { z-index: 2; opacity: 1; animation: slideSectionPreviewModern 1s ease; }
+@keyframes slideSectionPreviewModern { 0% { transform: translateX(100%); } 100% { transform: translateX(0%); } }
+.padd-15-preview { padding-left: 15px; padding-right: 15px; }
+.container-preview-modern { max-width: 1100px; width: 100%; margin: auto; }
+.section-preview-modern .container-preview-modern { padding-top: 60px; padding-bottom: 70px; }
+.section-title-preview { flex-basis: 100%; max-width: 100%; margin-bottom: 60px; } /* Changed flex to flex-basis */
+.section-title-preview h2 { font-size: 40px; color: var(--text-black-900); font-weight: 700; position: relative; }
+.section-title-preview h2::before { content: ""; height: 4px; width: 50px; background: var(--skin-color); position: absolute; left: 0; top: 100%; }
+.section-title-preview h2::after { content: ""; height: 4px; width: 25px; background: var(--skin-color); position: absolute; left: 0; top: 100%; margin-top: 8px; }
+.row-preview { display: flex; flex-wrap: wrap; margin-left: -15px; margin-right: -15px; position: relative; }
+.btn-preview { font-size: 16px; font-weight: 500; padding: 12px 35px; color: white; border-radius: 40px; display: inline-block; white-space: nowrap; border: none; background: var(--skin-color); transition: all 0.3s ease; text-decoration:none; }
+.btn-preview:hover { transform: scale(1.05); }
+.shadow-dark-preview { box-shadow: 0 0 20px rgba(48, 46, 77, 0.15); }
+.aside-preview-modern { width: 270px; height: 100%; background: var(--bg-black-100); position: fixed; left: -270px; top: 0; padding: 30px; z-index: 1000; display: flex; justify-content: center; align-items: center; border-right: 1px solid var(--bg-black-50); transition: all 0.3s ease; flex-direction:column;}
+.aside-preview-modern.open { left: 0; }
+.aside-preview-modern .nav-preview { margin-top: 50px; }
+.aside-preview-modern .nav-preview li { margin-bottom: 20px; display: block; }
+.aside-preview-modern .nav-preview li a { font-size: 16px; font-weight: 600; display: block; border-bottom: 1px solid var(--bg-black-50); color: var(--text-black-900); padding: 5px 15px; text-decoration:none; }
+.aside-preview-modern .nav-preview li a.active-nav-link-preview { color: var(--skin-color) !important; }
+.aside-preview-modern .nav-preview li a i.fa { margin-right: 15px; } /* Font Awesome icon */
+.nav-toggler-preview { height: 40px; width: 45px; border: 1px solid var(--bg-black-50); cursor: pointer; position: fixed; left: 30px; top: 20px; border-radius: 5px; background: var(--bg-black-100); display: none; justify-content: center; align-items: center; transition: all 0.3s ease; z-index:1001;}
+.nav-toggler-preview.open { left: 300px; }
+.nav-toggler-preview span { height: 2px; width: 18px; background: var(--skin-color); display: inline-block; position: relative; }
+.nav-toggler-preview.open span { background-color: transparent; }
+.nav-toggler-preview span::before { content: ""; height: 2px; width: 18px; background: var(--skin-color); position: absolute; top: -6px; left: 0; }
+.nav-toggler-preview.open span::before { transform: rotate(45deg); top: 0; }
+.nav-toggler-preview span::after { content: ""; height: 2px; width: 18px; background: var(--skin-color); position: absolute; top: 6px; left: 0; }
+.nav-toggler-preview.open span::after { transform: rotate(-45deg); top: 0; }
+.main-content-preview-modern { min-height: 100vh; display: block; padding: 0px; opacity: 1; position: fixed; left:0; top: 0; right: 0; bottom: 0; overflow-y: auto; overflow-x:hidden; background: var(--bg-black-900); z-index:0; transition: all 0.3s ease; width:100%;}
+/* @media (min-width:1200px) { .main-content-preview-modern { left:270px; width:calc(100% - 270px);}} */ /* Adjusted by JS */
+.main-content-preview-modern.open-main { left: 270px; width: calc(100% - 270px); }
+.home-preview-modern { min-height: 100vh; display: flex; color: var(--text-black-900); align-items:center; }
+.home-preview-modern .home-info-preview { flex-basis: 60%; max-width: 60%; } /* Changed flex to flex-basis */
+.home-preview-modern .home-info-preview .hello-preview { font-size: 28px; margin: 15px 0; }
+.home-preview-modern .home-info-preview .hello-preview span.name-preview { font-family: 'Clicker Script', cursive; font-size: 30px; font-weight: 700; color: var(--skin-color); }
+.home-preview-modern .home-info-preview .my-profession-preview { font-size: 30px; margin: 15px 0; }
+.home-preview-modern .home-info-preview .typing-preview { color: var(--skin-color); }
+.home-preview-modern .home-info-preview p { font-size: 20px; margin-bottom: 70px; color: var(--text-black-700); line-height:1.7; }
+.home-preview-modern .home-img-preview { flex-basis: 40%; max-width: 40%; text-align: center; position: relative; } /* Changed flex to flex-basis */
+.home-preview-modern .home-img-preview::before { content: ""; position: absolute; height: 80px; width: 80px; border-left: 10px solid var(--skin-color); border-top: 10px solid var(--skin-color); left: 20px; top: -40px; }
+.home-preview-modern .home-img-preview::after { content: ""; position: absolute; height: 80px; width: 80px; border-right: 10px solid var(--skin-color); border-bottom: 10px solid var(--skin-color); right: 20px; bottom: -40px; }
+.home-preview-modern .home-img-preview img { height: 350px; width:auto; max-width:100%; margin: auto; border-radius: 5px; object-fit:cover; }
+.about-preview-modern .about-content-preview { flex-basis: 100%; max-width: 100%; } /* Changed flex to flex-basis */
+.about-preview-modern .about-content-preview .about-text-preview { flex-basis: 100%; max-width: 100%; } /* Changed flex to flex-basis */
+.about-preview-modern .about-content-preview .about-text-preview h3 { font-size: 24px; margin-bottom: 15px; font-weight: 700; color: var(--text-black-900); }
+.about-preview-modern .about-content-preview .about-text-preview h3 span { color: var(--skin-color); }
+.about-preview-modern .about-content-preview .about-text-preview p { font-size: 16px; line-height: 25px; color: var(--text-black-700); }
+.about-preview-modern .personal-info-preview { flex-basis: 60%; max-width: 60%; margin-top: 40px; } /* Changed flex to flex-basis */
+.about-preview-modern .personal-info-preview .info-item-preview { flex-basis: 50%; max-width: 50%; } /* Changed flex to flex-basis */
+.about-preview-modern .personal-info-preview .info-item-preview p { font-weight: 600; padding: 10px 0; font-size: 16px; color: var(--text-black-900); border-bottom: 1px solid var(--bg-black-50); }
+.about-preview-modern .personal-info-preview .info-item-preview p span { font-weight: 400; color: var(--text-black-700); margin-left: 4px; display: inline-block; }
+.about-preview-modern .personal-info-preview .buttons-preview { margin-top: 30px; }
+.about-preview-modern .personal-info-preview .buttons-preview .btn-preview { margin-right: 15px; margin-top: 10px; }
+.about-preview-modern .education-preview, .about-preview .experience-preview { flex-basis: 50%; max-width: 50%; margin-top: 30px; } /* Changed flex to flex-basis */
+.about-preview-modern h3.title-preview { font-size: 24px; margin-bottom: 30px; font-weight: 700; color: var(--text-black-900); }
+.about-preview-modern .timeline-box-preview { flex-basis: 100%; max-width: 100%; } /* Changed flex to flex-basis */
+.about-preview-modern .timeline-preview { background: var(--bg-black-100); padding: 30px 15px; border: 1px solid var(--bg-black-50); border-radius: 10px; width: 100%; position: relative; }
+.about-preview-modern .timeline-preview .timeline-item-preview { position: relative; padding-left: 37px; padding-bottom: 50px; }
+.about-preview-modern .timeline-preview .timeline-item-preview:last-child { padding-bottom: 0; }
+.about-preview-modern .timeline-preview .timeline-item-preview::before { content: ""; width: 1px; position: absolute; height: 100%; left: 7px; top: 0; background-color: var(--skin-color); }
+.about-preview-modern .timeline-preview .circle-dot-preview { position: absolute; left: 0; top: 0; height: 15px; width: 15px; border-radius: 50%; background-color: var(--skin-color); }
+.about-preview-modern .timeline-preview .timeline-date-preview { font-size: 14px; font-weight: 400; margin-bottom: 12px; color: var(--text-black-700); }
+.about-preview-modern .timeline-preview .timeline-date-preview i.fa { margin-right: 5px; }
+.about-preview-modern .timeline-preview .timeline-title-preview { font-weight: 700; font-size: 18px; margin-bottom: 15px; text-transform: capitalize; color: var(--text-black-900); }
+.about-preview-modern .timeline-preview .timeline-text-preview { line-height: 25px; font-size: 16px; text-align: justify; color: var(--text-black-700); }
+.skills-section-preview-modern .skills-item-container-preview { display: flex; flex-wrap: wrap; justify-content: center; gap: 1rem;} /* Changed from service to skills */
+.skills-section-preview-modern .skills-item-preview { margin-bottom: 30px; text-align:center;}
+.skills-section-preview-modern .skills-item-inner-preview { background-color: var(--bg-black-100); border: 1px solid var(--bg-black-50); border-radius: 10px; padding: 0px 15px; text-align: center; transition: all 0.3s ease; width:200px; height:120px; display:flex; flex-direction:column; justify-content:center; align-items:center;}
+.skills-section-preview-modern .skills-item-inner-preview:hover { background-color: var(--skin-color) !important; }
+.skills-section-preview-modern .skills-item-inner-preview .icon-preview { height: 50px; width: 50px; border-radius: 50%; display: flex; margin: 0 auto 20px; align-items:center; justify-content:center; transition: all 0.3s ease;}
+.skills-section-preview-modern .skills-item-inner-preview .icon-preview svg { color: var(--skin-color) !important; transition: all 0.3s ease; width:30px; height:30px;} /* For Lucide icons */
+.skills-section-preview-modern .skills-item-inner-preview:hover .icon-preview svg { color: ${escCssVal(getContrastColor(data.accentColor))} !important; width:25px; height:25px;}
+.skills-section-preview-modern .skills-item-inner-preview h4 { font-size: 16px; margin-bottom: 10px; color: var(--text-black-900); font-weight: 700; text-transform: capitalize; }
+.skills-section-preview-modern .skills-item-inner-preview:hover h4 { color: ${escCssVal(getContrastColor(data.accentColor))} !important;}
+.portfolio-section-preview-modern .portfolio-heading-preview { flex-basis: 100%; max-width: 100%; margin-bottom: 40px; } /* Changed flex to flex-basis */
+.portfolio-section-preview-modern .portfolio-heading-preview h2 { color: var(--text-black-900); font-weight: 500; }
+.portfolio-section-preview-modern .portfolio-item-preview { flex-basis: 33.33%; max-width: 33.33%; margin-bottom: 30px; padding:0 15px; text-align:center;} /* Changed flex to flex-basis */
+.portfolio-section-preview-modern .portfolio-item-inner-preview { border: 6px solid var(--bg-black-100); border-radius: 10px; overflow: hidden; cursor: pointer; display:inline-block;}
+.portfolio-section-preview-modern .portfolio-item-inner-preview .portfolio-img-preview img { width: 100%; display: block; max-height:200px; object-fit:cover; }
+.portfolio-section-preview-modern .portfolio-item-preview h4.project-name-preview {margin-top:10px; color: var(--text-black-900); font-weight:600;}
+.portfolio-section-preview-modern .portfolio-item-preview p.project-desc-preview {font-size:0.9em; color: var(--text-black-700);}
+.portfolio-section-preview-modern .project-links-preview a { font-size:0.8em; padding: 0.2rem 0.5rem; margin: 0.3rem; border-radius:4px; text-decoration:none; display:inline-block; }
+.portfolio-section-preview-modern .project-links-preview a.live-link-preview { background: var(--skin-color); color: ${escCssVal(getContrastColor(data.accentColor))}; }
+.portfolio-section-preview-modern .project-links-preview a.code-link-preview { border: 1px solid var(--skin-color); color: var(--skin-color); }
+.contact-section-preview-modern .contact-info-item-preview { flex-basis: 25%; max-width: 25%; text-align: center; margin-bottom: 30px; padding:0 15px; } /* flex-basis */
+.contact-section-preview-modern .contact-info-item-preview .icon-preview { display: flex; justify-content:center; align-items:center; line-height:normal; } /* Changed inline-block to flex */
+.contact-section-preview-modern .contact-info-item-preview .icon-preview i.fa, .contact-section-preview-modern .contact-info-item-preview .icon-preview svg { font-size: 25px; color: var(--skin-color); } /* Font Awesome & SVG */
+.contact-section-preview-modern .contact-info-item-preview h4 { font-size: 18px; font-weight: 700; color: var(--text-black-900); text-transform: capitalize; margin: 15px 0 5px; }
+.contact-section-preview-modern .contact-info-item-preview p, .contact-section-preview-modern .contact-info-item-preview a { font-size: 16px; line-height: 25px; color: var(--text-black-700); font-weight: 400; word-break:break-all; text-decoration:none;}
+.contact-section-preview-modern .contact-info-item-preview a:hover {color: var(--skin-color);}
+/* Responsive from style.css */
+@media (max-width: 1199px) {
+  .aside-preview-modern { left: -270px !important; } /* Ensure it's hidden */
+  .main-content-preview-modern { left: 0 !important; width:100% !important; padding-left:0 !important;}
+  .nav-toggler-preview { display: flex !important; left: 15px !important; } /* Adjusted initial position */
+  .aside-preview-modern.open { left: 0 !important; }
+  .nav-toggler-preview.open { left: 285px !important; } /* Adjusted open position */
+  .main-content-preview-modern.open-main { left: 270px !important; width: calc(100% - 270px) !important; }
 }
-`;
+@media (max-width: 991px) {
+  .contact-section-preview-modern .contact-info-item-preview, .portfolio-section-preview-modern .portfolio-item-preview, .skills-section-preview-modern .skills-item-preview { flex-basis: 20% !important; max-width: 50% !important; }
+  .home-preview-modern .home-info-preview { flex-basis: 100% !important; max-width: 100% !important; text-align:center !important; order:2 !important;}
+  .home-preview-modern .home-img-preview { display: block !important; flex-basis: 100% !important; max-width:100% !important; margin-bottom:20px !important; order:1 !important; padding-left:0 !important; }
+}
+@media (max-width: 767px) {
+  .section-preview-modern {padding:0 15px !important;}
+  .contact-section-preview-modern .contact-info-item-preview, .portfolio-section-preview-modern .portfolio-item-preview, .skills-section-preview-modern .skills-item-preview,
+  .about-preview-modern .education-preview, .about-preview-modern .experience-preview { flex-basis: 100% !important; max-width: 100% !important; }
+  .about-preview-modern .personal-info-preview { flex-basis:100% !important; max-width:60% !important; }
+  .about-preview-modern .personal-info-preview .info-item-preview {flex-basis:100% !important; max-width:100% !important;}
+}
+/* Ensure no fixed width on main content for mobile when menu is closed */
+@media (max-width: 1199px) {
+  .main-content-preview-modern:not(.open-main) { width: 100% !important; left: 0 !important; }
+}
+  `.replace(/`/g, '\\`').replace(/\$\{/g, '\\${}'); // Escape backticks and ${ for JS embedding
 
-  const academicEntryHtml = (academic: AcademicEntryType | undefined, entryNumber: 1 | 2, isLastVisible: boolean) => {
-    if (!academic || !academic.qualification) return '';
-    let html = '<div class="template-modern-academic-entry" style="margin-bottom: 1.5rem; padding-bottom: 1.5rem; ' + (!isLastVisible ? 'border-bottom: 1px dashed ' + escCssVal(foregroundColor) + '33;' : '') + '">';
-    if (academic.imageUrl) {
-      html += `<img src="${escAttr(academic.imageUrl)}" alt="${escAttr(academic.qualification || 'Academic Achievement')}" data-ai-hint="education university campus" style="border-radius: 6px; margin-bottom: 1rem; width: 100%; max-width: 400px; height: auto; object-fit: cover; border: 1px solid ${escCssVal(data.primaryColor)}33; display:block; margin-left:auto; margin-right:auto;" />`;
-    }
-    html += `<h3 style="font-size: 1.25em; font-weight:600; color:${escCssVal(data.primaryColor)}; margin-bottom:0.1rem;">${escHtml(academic.qualification)}</h3>`;
-    if (academic.institution) html += `<p style="font-size: 1.05em; color:${escCssVal(foregroundColor)}BB; margin-bottom:0.1rem;">${escHtml(academic.institution)}</p>`;
-    if (academic.graduationYear) html += `<p style="font-size: 0.95em; color:${escCssVal(foregroundColor)}AA; margin-bottom:0.3rem;"><em>${escHtml(academic.graduationYear)}</em></p>`;
-    if (academic.grades) html += `<p style="font-size: 0.95em; color:${escCssVal(foregroundColor)}AA; margin-bottom:0.5rem;">Grades: ${escHtml(academic.grades)}</p>`;
-    if (academic.description) html += `<p style="font-size: 1em; color:${escCssVal(foregroundColor)}CC; line-height: 1.6;">${(escHtml(academic.description)).replace(/\n/g, '<br>')}</p>`;
-    html += '</div>';
-    return html;
-  };
+  inlineStyles += baseCssFromReference;
 
-  const projectCardHtml = (project: NonNullable<FormSchemaType['project1']>) => {
-    let imageHtml = '';
-    if (project.imageUrl) {
-      imageHtml = `<img src="${escAttr(project.imageUrl)}" alt="${escAttr(project.name)}" data-ai-hint="website screenshot" style="border-radius: 6px; margin-bottom: 1rem; width: 100%; height: auto; object-fit: cover; border: 1px solid ${escCssVal(data.primaryColor)}33;" />`;
-    } else {
-      imageHtml = `<div style="width: 100%; height: 225px; background-color: ${escCssVal(data.accentColor)}1A; border-radius: 6px; margin-bottom: 1rem; display: flex; align-items: center; justify-content: center; border: 1px solid ${escCssVal(data.primaryColor)}33;"><span style="color: ${escCssVal(foregroundColor)}AA; font-size: 0.9em;">Preview for ${escHtml(project.name)}</span></div>`;
-    }
+  let previewHtml = "";
+  previewHtml += "<html><head>";
+  previewHtml += "<meta name=\"viewport\" content=\"width=device-width, initial-scale=1.0\">";
+  previewHtml += "<title>" + escHtml(data.yourName) + " - Modern Portfolio</title>";
+  previewHtml += "<link rel=\"preconnect\" href=\"https://fonts.googleapis.com\">";
+  previewHtml += "<link rel=\"preconnect\" href=\"https://fonts.gstatic.com\" crossorigin>"; // Removed anonymous
+  previewHtml += "<link href=\"https://fonts.googleapis.com/css2?family=Clicker+Script&family=Poppins:wght@200;300;400;500;600;700&display=swap\" rel=\"stylesheet\">";
+  previewHtml += "<link rel=\"stylesheet\" href=\"https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.2.1/css/all.min.css\">"; // Font Awesome for preview icons
+  previewHtml += "<style>" + inlineStyles + "</style>";
+  previewHtml += "</head><body class=\"" + (isPreviewBgDark ? "dark-preview-mode" : "") + "\">";
+
+  previewHtml += "<div class=\"aside-preview-modern\" id=\"aside_preview_modern\">";
+  previewHtml += "  <ul class=\"nav-preview\">";
+  const previewNavLinks = [
+      { id: "home_preview_modern", label: "Home", icon: "fa fa-home", condition: true },
+      { id: "about_preview_modern", label: "About", icon: "fa fa-user", condition: data.showAboutSection },
+      { id: "skills_preview_modern", label: "Skills", icon: "fa fa-list", condition: data.showSkillsSection }, // Changed from Services
+      { id: "projects_preview_modern", label: "Projects", icon: "fa fa-briefcase", condition: data.showProjectsSection },
+      { id: "contact_preview_modern", label: "Contact", icon: "fa fa-comments", condition: data.showContactSection },
+  ];
+  previewNavLinks.filter(link => link.condition).forEach((link, index) => {
+    previewHtml += "<li><a href=\"#" + link.id + "\" class=\"" + (index === 0 ? "active-nav-link-preview" : "") + "\"><i class=\"" + link.icon + "\"></i> " + escHtml(link.label) + "</a></li>";
+  });
+  previewHtml += "  </ul>";
+  previewHtml += "</div>";
   
-    let cardString = '';
-    cardString += `<div style="background-color: ${escCssVal(data.backgroundColor)}; padding: 1.5rem; border-radius: 8px; box-shadow: 0 4px 6px ${escCssVal(foregroundColor)}1A; border: 1px solid ${escCssVal(foregroundColor)}22;">`;
-    cardString += imageHtml;
-    cardString += `<h3 style="font-size: 1.5em; font-weight: 600; color: ${escCssVal(data.primaryColor)}; margin-bottom: 0.5rem;">${escHtml(project.name)}</h3>`;
-    cardString += `<p style="color: ${escCssVal(foregroundColor)}CC; margin-bottom: 0.75rem; font-size: 0.9em; line-height: 1.6;">${(escHtml(project.description || "")).replace(/\n/g, '<br>')}</p>`;
-    cardString += `<p style="color: ${escCssVal(foregroundColor)}AA; font-size: 0.8em; margin-bottom: 1rem;"><strong>Technologies:</strong> ${escHtml(project.technologies)}</p>`;
-    cardString += '<div style="display: flex; gap: 0.75rem;">';
-    if (project.liveUrl) {
-      cardString += `<a href="${escAttr(project.liveUrl)}" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875em; font-weight: 500; border-radius: 6px; background-color: ${escCssVal(data.primaryColor)}; color: ${escCssVal(primaryContrast)}; text-decoration: none;">Live Site</a>`;
-    }
-    if (project.repoUrl) {
-      cardString += `<a href="${escAttr(project.repoUrl)}" target="_blank" style="display: inline-flex; align-items: center; justify-content: center; padding: 0.5rem 1rem; font-size: 0.875em; font-weight: 500; border-radius: 6px; border: 1px solid ${escCssVal(data.primaryColor)}77; color: ${escCssVal(data.primaryColor)}; background-color: ${escCssVal(data.backgroundColor)}; text-decoration: none;">View Code</a>`;
-    }
-    cardString += '</div>'; // Close links div
-    cardString += '</div>'; // Close card div
-    return cardString;
-  };
+  previewHtml += "<div class=\"nav-toggler-preview\" id=\"nav_toggler_preview_modern\"><span></span></div>";
   
-  let inlineStyles = '';
-  inlineStyles += " body, h1, h2, h3, p, ul, li, a, div, section, header, footer, nav, main, img { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }";
-  inlineStyles += " .template-modern-body {";
-  inlineStyles += `   font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;`;
-  inlineStyles += `   background-color: ${escCssVal(data.backgroundColor)};`;
-  inlineStyles += `   color: ${escCssVal(foregroundColor)};`;
-  inlineStyles += "   line-height: 1.6;";
-  inlineStyles += "   min-height: 100vh;";
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-container { max-width: 1100px; margin: 0 auto; padding: 0 1.5rem; }";
-  inlineStyles += " .template-modern-hero {";
-  inlineStyles += `   background-color: ${escCssVal(data.primaryColor)};`;
-  inlineStyles += `   color: ${escCssVal(primaryContrast)};`;
-  inlineStyles += "   padding: 4rem 1.5rem; text-align: center;";
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-hero img {";
-  inlineStyles += "   width: 150px; height: 150px; border-radius: 50%; margin: 0 auto 1.5rem auto;";
-  inlineStyles += `   border: 4px solid ${escCssVal(data.accentColor)}; object-fit: cover; box-shadow: 0 0 15px ${escCssVal(data.accentColor)}55;`;
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-hero h1 { font-size: 3em; font-weight: 700; margin-bottom: 0.5rem; }";
-  inlineStyles += " .template-modern-hero h2 { font-size: 1.5em; font-weight: 300; margin-bottom: 1rem; opacity: 0.9; }";
-  inlineStyles += " .template-modern-hero p { font-size: 1.1em; max-width: 650px; margin: 0 auto 2rem auto; opacity: 0.9; }";
-  inlineStyles += " .template-modern-hero-cta {";
-  inlineStyles += "   display: inline-flex; align-items: center; justify-content: center; padding: 0.75rem 2rem;";
-  inlineStyles += "   font-size: 1.1em; font-weight: 500; border-radius: 6px;";
-  inlineStyles += `   background-color: ${escCssVal(data.accentColor)}; color: ${escCssVal(accentContrast)}; text-decoration: none;`;
-  inlineStyles += " }";
+  previewHtml += "<div class=\"main-content-preview-modern\" id=\"main_content_preview_modern\">";
+
+  // HOME SECTION PREVIEW
+  previewHtml += "<section class=\"home-preview-modern section-preview-modern active\" id=\"home_preview_modern\">";
+  previewHtml += "  <div class=\"container-preview-modern\">";
+  previewHtml += "    <div class=\"row-preview\">";
+  previewHtml += "      <div class=\"home-info-preview padd-15-preview\">";
   
-  inlineStyles += " .template-modern-nav {";
-  inlineStyles += `   background-color: ${escCssVal(data.backgroundColor)}; border-bottom: 1px solid ${escCssVal(foregroundColor)}22;`;
-  inlineStyles += "   box-shadow: 0 1px 3px rgba(0,0,0,0.05); position: sticky; top: 0; z-index: 50;";
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-nav-container { display: flex; justify-content: center; align-items: center; gap: 1.5rem; padding: 0.75rem 1.5rem; }";
-  inlineStyles += " .template-modern-nav a {";
-  inlineStyles += `   color: ${escCssVal(foregroundColor)}; text-decoration: none; font-weight: 500; font-size: 0.95em;`;
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-nav a:hover { color: " + escCssVal(data.primaryColor) + "; }";
+  let heroNamePreview = escHtml(data.yourName);
+  let heroTitlePreviewString = data.heroTitle ? data.heroTitle.split(",")[0].trim() : "Professional";
+  let escapedHeroTitlePreview = escHtml(heroTitlePreviewString);
   
-  inlineStyles += " .template-modern-main { padding: 3rem 0; }"; 
-  inlineStyles += " .template-modern-section { margin-bottom: 4rem; }";
-  inlineStyles += " .template-modern-section-title-container { text-align: center; margin-bottom: 2.5rem; }";
-  inlineStyles += " .template-modern-section-title {";
-  inlineStyles += "   font-size: 2.5em; font-weight: 600;";
-  inlineStyles += `   color: ${escCssVal(data.primaryColor)}; display: inline-flex; align-items: center;`; 
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-section-title svg { width: 2.5rem; height: 2.5rem; margin-right: 0.75rem;}";
-  inlineStyles += " .template-modern-section-content-card {";
-  inlineStyles += `   background-color: ${escCssVal(data.backgroundColor)}; padding: 2rem; border-radius: 12px;`;
-  inlineStyles += `   box-shadow: 0 5px 15px ${escCssVal(foregroundColor)}1A; border: 1px solid ${escCssVal(foregroundColor)}22;`;
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-skills-list { display: flex; flex-wrap: wrap; justify-content: center; gap: 0.75rem; list-style: none; padding: 0; }";
-  inlineStyles += " .template-modern-skills-list li {";
-  inlineStyles += `   background-color: ${escCssVal(data.accentColor)}; color: ${escCssVal(accentContrast)};`;
-  inlineStyles += "   padding: 0.5rem 1rem; border-radius: 20px; font-size: 0.9em; font-weight: 500;";
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-projects-grid { display: grid; grid-template-columns: 1fr; gap: 2rem; }";
-  inlineStyles += " @media (min-width: 768px) { .template-modern-projects-grid { grid-template-columns: repeat(auto-fit, minmax(340px, 1fr)); } }";
+  previewHtml += "        <h3 class=\"hello-preview\">Hello, my name is <span class=\"name-preview\" style=\"font-family: 'Clicker Script', cursive; color: var(--skin-color);\">" + heroNamePreview + "</span></h3>";
+  previewHtml += "        <h3 class=\"my-profession-preview\">I'm a <span class=\"typing-preview\" style=\"color: var(--skin-color);\">" + escapedHeroTitlePreview + "</span></h3>";
   
-  inlineStyles += " .template-modern-footer {";
-  inlineStyles += `   background-color: ${escCssVal(foregroundColor)}11; color: ${escCssVal(foregroundColor)}AA;`;
-  inlineStyles += "   padding: 2.5rem 1.5rem; text-align: center;";
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-footer-contact-card {";
-  inlineStyles += `   background-color: ${escCssVal(data.backgroundColor)}; color: ${escCssVal(foregroundColor)};`;
-  inlineStyles += `   padding: 2rem; border-radius: 12px; border: 1px solid ${escCssVal(foregroundColor)}22;`;
-  inlineStyles += `   box-shadow: 0 5px 15px ${escCssVal(foregroundColor)}0D; max-width: 650px; margin: 0 auto 2rem auto;`;
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-footer p { font-size: 1em; margin-bottom: 1rem; }";
-  inlineStyles += " .template-modern-footer-email-button {";
-  inlineStyles += "   display: inline-block; padding: 0.75rem 2rem; font-size: 1.1em; font-weight: 500; border-radius: 6px;";
-  inlineStyles += `   background-color: ${escCssVal(data.primaryColor)}; color: ${escCssVal(primaryContrast)}; text-decoration: none; margin-bottom: 2rem;`;
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-social-links { display: flex; justify-content: center; gap: 1.5rem; margin-bottom: 1.5rem; }";
-  inlineStyles += " .template-modern-social-links a {";
-  inlineStyles += `   color: ${escCssVal(foregroundColor)}AA; text-decoration: none; font-size: 1.2em; display: inline-block;`;
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-social-links a:hover { color: " + escCssVal(data.primaryColor) + "; }";
-  inlineStyles += " .template-modern-resume-link {";
-  inlineStyles += "   display: inline-flex; align-items: center; justify-content: center; padding: 0.6rem 1.5rem;";
-  inlineStyles += "   font-size: 1em; font-weight: 500; border-radius: 6px;";
-  inlineStyles += `   border: 1px solid ${escCssVal(data.primaryColor)}77; color: ${escCssVal(data.primaryColor)};`;
-  inlineStyles += `   background-color: ${escCssVal(data.backgroundColor)}; text-decoration: none;`;
-  inlineStyles += " }";
-  inlineStyles += " .template-modern-resume-link svg { margin-right: 0.5rem; }";
-  inlineStyles += " .template-modern-copyright { font-size: 0.9em; margin-top: 2.5rem; }";
-  inlineStyles += " .template-modern-footer-tagline { font-size: 0.8em; opacity: 0.8; margin-top: 0.25rem; }";
-  
-  let previewHtml = '';
-  previewHtml += '<html>';
-  previewHtml += '<head>';
-  previewHtml += `<title>${escHtml(data.yourName)} - Portfolio (Modern)</title>`;
-  previewHtml += '<style>';
-  previewHtml += " body, h1, h2, h3, p, ul, li, a, div, section, header, footer, nav, main, img { margin: 0; padding: 0; box-sizing: border-box; scroll-behavior: smooth; }";
-  previewHtml += escCssVal(inlineStyles);
-  previewHtml += '</style>';
-  previewHtml += '</head>';
-  previewHtml += '<body class="template-modern-body">';
-  
-  previewHtml += '<header class="template-modern-hero">';
-  previewHtml += `<img src="${escAttr(data.heroImagePlaceholder)}" alt="${escAttr(data.yourName)}" data-ai-hint="portrait professional" />`;
-  previewHtml += `<h1>${escHtml(data.yourName)}</h1>`;
-  previewHtml += `<h2>${escHtml(data.heroTitle)}</h2>`;
-  if (data.heroTagline) previewHtml += `<p>${(escHtml(data.heroTagline)).replace(/\n/g, '<br>')}</p>`;
-  if (data.heroCtaText) {
-    previewHtml += `<a href="#contact" class="template-modern-hero-cta">${escHtml(data.heroCtaText)}</a>`;
+  previewHtml += "        <p>" + (escHtml(data.heroTagline || "")).replace(/\n/g, "<br/>") + "</p>";
+  if(data.showResumeLink && data.resumeUrl) previewHtml += "        <a href=\"" + escAttr(data.resumeUrl) + "\" class=\"btn-preview\" target=\"_blank\">Download CV</a>";
+  previewHtml += "      </div>";
+  if(data.heroImagePlaceholder) {
+    previewHtml += "      <div class=\"home-img-preview padd-15-preview\">";
+    previewHtml += "        <img src=\"" + escAttr(data.heroImagePlaceholder) + "\" alt=\"hero\" data-ai-hint=\"professional portrait modern theme\"/>";
+    previewHtml += "      </div>";
   }
-  previewHtml += '</header>';
-  
-  previewHtml += '<nav class="template-modern-nav">';
-  previewHtml += '<div class="template-modern-container template-modern-nav-container">';
-  if (data.showAboutSection) previewHtml += '<a href="#about">About</a>';
-  if (data.showAcademicSection) previewHtml += '<a href="#academic">Education</a>';
-  if (data.showProjectsSection) previewHtml += '<a href="#projects">Projects</a>';
-  if (data.showSkillsSection) previewHtml += '<a href="#skills">Skills</a>';
-  if (data.showContactSection) previewHtml += '<a href="#contact">Contact</a>';
-  previewHtml += '</div></nav>';
-  
-  previewHtml += '<main class="template-modern-main template-modern-container">';
-  if (data.showAboutSection) {
-    previewHtml += '<section id="about" class="template-modern-section">';
-    previewHtml += '<div class="template-modern-section-title-container"><h2 class="template-modern-section-title"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><circle cx="12" cy="10" r="3"></circle><path d="M7 20.662V19a2 2 0 0 1 2-2h6a2 2 0 0 1 2 2v1.662"></path></svg>About Me</h2></div>';
-    previewHtml += '<div class="template-modern-section-content-card">';
-    if (data.aboutBio) previewHtml += `<p style="font-size: 1.1em; line-height: 1.7; margin-bottom: 1.5rem;">${(escHtml(data.aboutBio)).replace(/\n/g, '<br>')}</p>`;
-    if (data.showFunFact && data.aboutFunFact) {
-      previewHtml += `<p style="font-size: 1em; font-style: italic; color: ${escCssVal(foregroundColor)}AA; border-left: 4px solid ${escCssVal(data.accentColor)}; padding-left: 1rem; background-color: ${escCssVal(data.accentColor)}1A; padding: 0.5rem 1rem; border-radius: 0 4px 4px 0;">Fun Fact: ${(escHtml(data.aboutFunFact)).replace(/\n/g, '<br>')}</p>`;
+  previewHtml += "    </div>";
+  previewHtml += "  </div>";
+  previewHtml += "</section>";
+
+  // ABOUT SECTION PREVIEW
+  if(data.showAboutSection) {
+    previewHtml += "<section class=\"about-preview-modern section-preview-modern\" id=\"about_preview_modern\" style=\"display:none;\">"; 
+    previewHtml += "  <div class=\"container-preview-modern\">";
+    previewHtml += "    <div class=\"row-preview\"><div class=\"section-title-preview padd-15-preview\"><h2>About Me</h2></div></div>";
+    previewHtml += "    <div class=\"row-preview\">";
+    previewHtml += "      <div class=\"about-content-preview padd-15-preview\">";
+    previewHtml += "        <div class=\"row-preview\">";
+    previewHtml += "          <div class=\"about-text-preview padd-15-preview\">";
+
+    let aboutNamePreview = escHtml(data.yourName);
+    let aboutHeroTitlePreviewString = data.heroTitle ? data.heroTitle.split(",")[0].trim() : "a Professional";
+    let aboutEscapedHeroTitlePreview = escHtml(aboutHeroTitlePreviewString);
+    previewHtml += "            <h3>I'm " + aboutNamePreview + " and <span style=\"color:var(--skin-color);\">" + aboutEscapedHeroTitlePreview + "</span></h3>";
+    
+    previewHtml += "            <p>" + (escHtml(data.aboutBio || "")).replace(/\n/g, "<br/>") + "</p>";
+    previewHtml += "          </div>";
+    previewHtml += "        </div>";
+    if(data.showAcademicSection && data.academicEntries && data.academicEntries.filter(entry => entry && entry.qualification).length > 0) {
+        previewHtml += "    <div class=\"row-preview\">";
+        previewHtml += "      <div class=\"education-preview padd-15-preview\">"; 
+        previewHtml += "        <h3 class=\"title-preview\">Education</h3>";
+        previewHtml += "        <div class=\"row-preview\"><div class=\"timeline-box-preview padd-15-preview\"><div class=\"timeline-preview shadow-dark-preview\">";
+        (data.academicEntries || []).filter(entry => entry && entry.qualification).forEach(entry => {
+            if (!entry) return;
+            previewHtml += "<div class=\"timeline-item-preview\">";
+            previewHtml += "  <div class=\"circle-dot-preview\"></div>";
+            previewHtml += "  <h3 class=\"timeline-date-preview\"><i class=\"fa fa-calendar\"></i> " + escHtml(entry.graduationYear) + "</h3>";
+            previewHtml += "  <h4 class=\"timeline-title-preview\">" + escHtml(entry.qualification) + " - " + escHtml(entry.institution) +"</h4>";
+            if(entry.grades) previewHtml += "  <p class=\"timeline-text-preview\" style=\"font-style:italic; font-size:0.9em; margin-bottom:5px;\">Grades: " + escHtml(entry.grades) + "</p>";
+            previewHtml += "  <p class=\"timeline-text-preview\">" + (escHtml(entry.description || "")).replace(/\n/g, "<br/>") + "</p>";
+            previewHtml += "</div>";
+        });
+        previewHtml += "        </div></div></div>";
+        previewHtml += "      </div>";
+        previewHtml += "    </div>";
     }
-    previewHtml += '</div></section>';
+    previewHtml += "      </div>";
+    previewHtml += "    </div>";
+    previewHtml += "  </div>";
+    previewHtml += "</section>";
   }
 
-  if (data.showAcademicSection) {
-    previewHtml += '<section id="academic" class="template-modern-section">';
-    previewHtml += '<div class="template-modern-section-title-container"><h2 class="template-modern-section-title"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 22v-4a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v4"/><path d="M18 18.5c0-2.21-1.79-4-4-4H7c-2.21 0-4 1.79-4 4V22h15v-3.5Z"/><path d="M2 10h20"/><path d="M2 14h20"/><path d="M14 2v4a2 2 0 0 0 2 2h4"/><path d="M5 2v4a2 2 0 0 0 2 2h3M19 10V6a2 2 0 0 0-2-2H7a2 2 0 0 0-2 2v4"/></svg>Academic Background</h2></div>';
-    previewHtml += '<div class="template-modern-section-content-card">';
-    const isAcademic2Visible = data.showAcademic2 && data.academic2 && data.academic2.qualification;
-    if (data.showAcademic1 && data.academic1) previewHtml += academicEntryHtml(data.academic1, 1, !isAcademic2Visible);
-    if (isAcademic2Visible && data.academic2) previewHtml += academicEntryHtml(data.academic2, 2, true);
-    previewHtml += '</div></section>';
-  }
-  
-  if (data.showProjectsSection) {
-    previewHtml += '<section id="projects" class="template-modern-section">';
-    previewHtml += '<div class="template-modern-section-title-container"><h2 class="template-modern-section-title"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect><line x1="3" y1="9" x2="21" y2="9"></line><line x1="9" y1="21" x2="9" y2="9"></line></svg>My Work</h2></div>';
-    previewHtml += '<div class="template-modern-projects-grid">';
-    if (data.showProject1 && data.project1) previewHtml += projectCardHtml(data.project1);
-    if (data.showProject2 && data.project2) previewHtml += projectCardHtml(data.project2);
-    previewHtml += '</div></section>';
-  }
-  
-  if (data.showSkillsSection) {
-    previewHtml += '<section id="skills" class="template-modern-section">';
-    previewHtml += '<div class="template-modern-section-title-container"><h2 class="template-modern-section-title"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon></svg>Skills & Technologies</h2></div>';
-    previewHtml += '<div class="template-modern-section-content-card">';
-    if (data.aboutSkills) previewHtml += `<p style="font-size: 1.1em; text-align: center; margin-bottom: 1.5rem;">${(escHtml(data.aboutSkills)).replace(/\n/g, '<br>')}</p>`;
-    const skillsArray = (data.aboutSkills || "").split(',').map(skill => skill.trim()).filter(skill => skill);
-    if (skillsArray.length > 0) {
-      previewHtml += '<ul class="template-modern-skills-list">';
-      previewHtml += skillsArray.map(skill => `<li>${escHtml(skill)}</li>`).join('');
-      previewHtml += '</ul>';
+  // SKILLS SECTION PREVIEW (Replaces Services)
+  if(data.showSkillsSection && data.aboutSkills) {
+    const skillsPreviewList = data.aboutSkills.split(',').map(s => s.trim()).filter(s => s);
+    if (skillsPreviewList.length > 0) {
+        previewHtml += "<section class=\"skills-section-preview-modern section-preview-modern\" id=\"skills_preview_modern\" style=\"display:none;\">";
+        previewHtml += "  <div class=\"container-preview-modern\">";
+        previewHtml += "    <div class=\"row-preview\"><div class=\"section-title-preview padd-15-preview\"><h2>My Skills</h2></div></div>";
+        previewHtml += "    <div class=\"row-preview skills-item-container-preview\">"; 
+        skillsPreviewList.forEach(skill => {
+            previewHtml += "<div class=\"skills-item-preview\">";
+            previewHtml += "  <div class=\"skills-item-inner-preview\">";
+            previewHtml += "    <h4>" + escHtml(skill) + "</h4>";
+            previewHtml += "  </div>";
+            previewHtml += "</div>";
+        });
+        previewHtml += "    </div>";
+        previewHtml += "  </div>";
+        previewHtml += "</section>";
     }
-    previewHtml += '</div></section>';
   }
-  previewHtml += '</main>';
-  
-  if (data.showContactSection) {
-    previewHtml += '<footer id="contact" class="template-modern-footer">';
-    previewHtml += '<div class="template-modern-section-title-container"><h2 class="template-modern-section-title" style="color: ' + escCssVal(data.primaryColor) + ';"><svg xmlns="http://www.w3.org/2000/svg" width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"></path><polyline points="22,6 12,13 2,6"></polyline></svg>Get In Touch</h2></div>';
-    previewHtml += '<div class="template-modern-footer-contact-card">';
-    previewHtml += "<p>I'm always open to discussing new projects, creative ideas or opportunities to be part of your visions.</p>";
-    if (data.contactEmail) {
-        previewHtml += `<a href="mailto:${escAttr(data.contactEmail)}" class="template-modern-footer-email-button">Say Hello</a>`;
-    }
-    previewHtml += '<div class="template-modern-social-links">';
-    if (data.contactLinkedin) previewHtml += `<a href="${escAttr(data.contactLinkedin)}" target="_blank" rel="noopener noreferrer" aria-label="LinkedIn" title="LinkedIn"><svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"></path><rect x="2" y="9" width="4" height="12"></rect><circle cx="4" cy="4" r="2"></circle></svg></a>`;
-    if (data.contactGithub) previewHtml += `<a href="${escAttr(data.contactGithub)}" target="_blank" rel="noopener noreferrer" aria-label="GitHub" title="GitHub"><svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path></svg></a>`;
-    if (data.contactInstagram) previewHtml += `<a href="${escAttr(data.contactInstagram)}" target="_blank" rel="noopener noreferrer" aria-label="Instagram" title="Instagram"><svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"></rect><path d="M16 11.37A4 4 0 1 1 12.63 8 4 4 0 0 1 16 11.37z"></path><line x1="17.5" y1="6.5" x2="17.51" y2="6.5"></line></svg></a>`;
-    previewHtml += '</div>';
-    if (data.showResumeLink && data.resumeUrl) {
-      previewHtml += `<div><a href="${escAttr(data.resumeUrl)}" target="_blank" rel="noopener noreferrer" class="template-modern-resume-link"><svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>Download Resume</a></div>`;
-    }
-    previewHtml += '</div>';
-    previewHtml += `<p class="template-modern-copyright">&copy; ${new Date().getFullYear()} ${escHtml(data.yourName)}. All rights reserved.</p>`;
-    previewHtml += '<p class="template-modern-footer-tagline">Modern Portfolio Template</p>';
-    previewHtml += '</footer>';
+
+  // PROJECTS SECTION PREVIEW (Mapped from Portfolio)
+  if(data.showProjectsSection && data.projects && data.projects.filter(p => p && p.name).length > 0) {
+    previewHtml += "<section class=\"portfolio-section-preview-modern section-preview-modern\" id=\"projects_preview_modern\" style=\"display:none;\">";
+    previewHtml += "  <div class=\"container-preview-modern\">";
+    previewHtml += "    <div class=\"row-preview\"><div class=\"section-title-preview padd-15-preview\"><h2>My Projects</h2></div></div>";
+    previewHtml += "    <div class=\"row-preview\"><div class=\"portfolio-heading-preview padd-15-preview\"><h2>Selected Projects :</h2></div></div>";
+    previewHtml += "    <div class=\"row-preview\">";
+    (data.projects || []).filter(p => p && p.name).forEach(project => {
+        if (!project) return;
+        previewHtml += "<div class=\"portfolio-item-preview\">";
+        previewHtml += "  <div class=\"portfolio-item-inner-preview shadow-dark-preview\">";
+        previewHtml += "    <div class=\"portfolio-img-preview\">";
+        previewHtml += "      <img src=\"" + escAttr(project.imageUrl || 'https://placehold.co/400x250.png') + "\" alt=\"" + escAttr(project.name) + "\" data-ai-hint=\"project app modern theme\"/>";
+        previewHtml += "    </div>";
+        previewHtml += "  </div>";
+        previewHtml += "  <h4 class=\"project-name-preview\">" + escHtml(project.name) + "</h4>";
+        if(project.description) previewHtml += "  <p class=\"project-desc-preview\">" + (escHtml(project.description)).replace(/\n/g, "<br/>") + "</p>";
+        previewHtml += "  <div class=\"project-links-preview\">";
+        if(project.liveUrl) previewHtml += "    <a href=\"" + escAttr(project.liveUrl) + "\" class=\"live-link-preview\" target=\"_blank\">Live</a>";
+        if(project.repoUrl) previewHtml += "    <a href=\"" + escAttr(project.repoUrl) + "\" class=\"code-link-preview\" target=\"_blank\">Code</a>";
+        previewHtml += "  </div>";
+        previewHtml += "</div>";
+    });
+    previewHtml += "    </div>";
+    previewHtml += "  </div>";
+    previewHtml += "</section>";
   }
   
-  previewHtml += '</body></html>';
+  // CONTACT SECTION PREVIEW
+  if(data.showContactSection) {
+    previewHtml += "<footer class=\"contact-section-preview-modern section-preview-modern\" id=\"contact_preview_modern\" style=\"display:none;\">";
+    previewHtml += "  <div class=\"container-preview-modern\">";
+    previewHtml += "    <div class=\"row-preview\"><div class=\"section-title-preview padd-15-preview\"><h2>Contact Me</h2></div></div>";
+    previewHtml += "    <div class=\"row-preview\">";
+    if(data.contactEmail) {
+        previewHtml += "<div class=\"contact-info-item-preview\">";
+        previewHtml += "  <div class=\"icon-preview\"><i class=\"fa fa-envelope\"></i></div>";
+        previewHtml += "  <h4>Email</h4><p>" + escHtml(data.contactEmail) + "</p>";
+        previewHtml += "</div>";
+    }
+    if(data.contactLinkedin) {
+        previewHtml += "<div class=\"contact-info-item-preview\">";
+        previewHtml += "  <div class=\"icon-preview\"><i class=\"fab fa-linkedin-in\"></i></div>";
+        previewHtml += "  <h4>LinkedIn</h4><p><a href=\""+escAttr(data.contactLinkedin)+"\" target=\"_blank\">Profile</a></p>";
+        previewHtml += "</div>";
+    }
+    if(data.contactGithub) {
+        previewHtml += "<div class=\"contact-info-item-preview\">";
+        previewHtml += "  <div class=\"icon-preview\"><i class=\"fab fa-github\"></i></div>";
+        previewHtml += "  <h4>GitHub</h4><p><a href=\""+escAttr(data.contactGithub)+"\" target=\"_blank\">Profile</a></p>";
+        previewHtml += "</div>";
+    }
+    if(data.contactInstagram) {
+        previewHtml += "<div class=\"contact-info-item-preview\">";
+        previewHtml += "  <div class=\"icon-preview\"><i class=\"fab fa-instagram\"></i></div>";
+        previewHtml += "  <h4>Instagram</h4><p><a href=\""+escAttr(data.contactInstagram)+"\" target=\"_blank\">Profile</a></p>";
+        previewHtml += "</div>";
+    }
+    previewHtml += "    </div>";
+    previewHtml += "    <p style=\"text-align:center; font-size:0.9em; color:var(--text-black-700); padding-top:20px;\">&copy; " + new Date().getFullYear() + " " + escHtml(data.yourName) + ". All Rights Reserved.</p>";
+    previewHtml += "  </div>";
+    previewHtml += "</footer>";
+  }
+
+  previewHtml += "</div>"; // Closing main-content
+
+  const referenceScriptJsPreview = `
+    // Typed.js for Preview
+    var typedPreviewInstance = null;
+    try {
+      if (typeof Typed !== 'undefined' && document.querySelector(".typing-preview")) {
+        var heroTitlePreviewModern = "${escJsStr(data.heroTitle || "Professional")}";
+        var titlesPreviewModern = heroTitlePreviewModern.split(",").map(s => s.trim()).filter(s => s);
+        if(titlesPreviewModern.length === 0) titlesPreviewModern.push("Professional");
+        typedPreviewInstance = new Typed(".typing-preview", {
+          strings: titlesPreviewModern,
+          typeSpeed: 100,
+          backSpeed: 60,
+          loop: true,
+        });
+      }
+    } catch(e) { console.error("Typed.js init error in modern preview:", e); }
+
+    // Navigation logic for Preview
+    const navPreviewModern = document.querySelector("#aside_preview_modern .nav-preview");
+    const navListPreviewModern = navPreviewModern ? navPreviewModern.querySelectorAll("li") : [];
+    const allSectionPreviewModern = document.querySelectorAll("#main_content_preview_modern .section-preview-modern");
+    const mainContentPreviewModern = document.getElementById("main_content_preview_modern");
+    
+    function showSectionPreviewModern(targetId) {
+      let foundTarget = false;
+      allSectionPreviewModern.forEach(section => {
+        if (section.id === targetId) {
+          section.classList.add("active");
+          section.style.display = "block"; 
+          foundTarget = true;
+        } else {
+          section.classList.remove("active");
+          section.style.display = "none"; 
+        }
+      });
+      if(foundTarget) updateNavPreviewModern(targetId);
+    }
+    
+    function updateNavPreviewModern(currentSectionId) {
+      navListPreviewModern.forEach(li => {
+        const link = li.querySelector("a");
+        if(link) {
+            link.classList.remove("active-nav-link-preview");
+            if (link.getAttribute("href") && link.getAttribute("href").substring(1) === currentSectionId) {
+              link.classList.add("active-nav-link-preview");
+            }
+        }
+      });
+    }
+    
+    navListPreviewModern.forEach(li => {
+      const a = li.querySelector("a");
+      if(a && a.getAttribute("href")) {
+        a.addEventListener("click", function (event) {
+          event.preventDefault();
+          const targetId = this.getAttribute("href").substring(1);
+          const targetElement = document.getElementById(targetId);
+          if (targetElement && mainContentPreviewModern) {
+            mainContentPreviewModern.scrollTo({
+                top: targetElement.offsetTop - 0,
+                behavior: 'smooth'
+            });
+             // Wait for scroll to finish by using a timeout, then show section.
+            // This is a simplified way to handle it.
+            setTimeout(() => {
+              showSectionPreviewModern(targetId);
+            }, 50); // Adjust timeout if needed
+          }
+          const asideElem = document.getElementById("aside_preview_modern");
+          const togglerElem = document.getElementById("nav_toggler_preview_modern");
+          // const mainContentElem = document.getElementById("main_content_preview_modern"); // Already have mainContentPreviewModern
+          if (window.innerWidth < 1200) { 
+            if(asideElem) asideElem.classList.remove("open");
+            if(togglerElem) togglerElem.classList.remove("open");
+            if(mainContentPreviewModern) mainContentPreviewModern.classList.remove("open-main");
+            // Explicitly set styles for mobile menu closing
+            if(asideElem) asideElem.style.left = '-270px'; 
+            if(mainContentPreviewModern) mainContentPreviewModern.style.left = '0px'; 
+            if(mainContentPreviewModern) mainContentPreviewModern.style.width = '100%'; 
+            if(togglerElem) togglerElem.style.left = '15px'; // Reset toggler position
+          }
+        });
+      }
+    });
+
+    const navTogglerBtnPreviewModern = document.getElementById("nav_toggler_preview_modern");
+    const asidePreviewModern = document.getElementById("aside_preview_modern");
+    // const mainContentPreviewModern = document.getElementById("main_content_preview_modern"); // Already defined
+
+    function asideSectionTogglerBtnPreviewModern() {
+      if(asidePreviewModern) asidePreviewModern.classList.toggle("open");
+      if(navTogglerBtnPreviewModern) navTogglerBtnPreviewModern.classList.toggle("open");
+      if(mainContentPreviewModern) mainContentPreviewModern.classList.toggle("open-main");
+    }
+    if(navTogglerBtnPreviewModern) {
+        navTogglerBtnPreviewModern.addEventListener("click", asideSectionTogglerBtnPreviewModern);
+    }
+    
+    // Initial setup for sections based on scroll (simplified for preview)
+    if (allSectionPreviewModern.length > 0 && navListPreviewModern.length > 0 && mainContentPreviewModern) {
+        if (mainContentPreviewModern.scrollTop === 0 && document.getElementById('home_preview_modern')) {
+             showSectionPreviewModern('home_preview_modern');
+        } else {
+            // Attempt to find the currently visible section on load
+            let initialActiveId = 'home_preview_modern';
+            for (let section of allSectionPreviewModern) {
+                if (section.style.display !== 'none') {
+                    const rect = section.getBoundingClientRect();
+                    const mainRect = mainContentPreviewModern.getBoundingClientRect();
+                    if (rect.top <= mainRect.top + 50) { 
+                        initialActiveId = section.id;
+                    } else {
+                        break; 
+                    }
+                }
+            }
+            showSectionPreviewModern(initialActiveId);
+        }
+    }
+     
+    if (mainContentPreviewModern) {
+        mainContentPreviewModern.addEventListener('scroll', function() {
+            let currentSectionId = 'home_preview_modern'; // Default
+            let minDistance = Infinity;
+            const viewportCenter = mainContentPreviewModern.scrollTop + mainContentPreviewModern.clientHeight / 2;
+
+            for (let section of allSectionPreviewModern) {
+                if (section.style.display !== 'none') { // Consider only currently "shown" sections by JS
+                    const sectionTop = section.offsetTop;
+                    const sectionBottom = sectionTop + section.offsetHeight;
+                    const sectionCenter = sectionTop + section.offsetHeight / 2;
+                    
+                    // Check if section is dominant in viewport
+                    if (sectionTop < viewportCenter && sectionBottom > viewportCenter) {
+                         currentSectionId = section.id;
+                         break; // Found the most dominant section
+                    }
+                    // Fallback: if no section is dominant, pick the one closest to the center
+                    const distance = Math.abs(sectionCenter - viewportCenter);
+                    if (distance < minDistance) {
+                        minDistance = distance;
+                        currentSectionId = section.id;
+                    }
+                }
+            }
+             // Only update nav, don't call showSectionPreviewModern here to avoid scroll jumps
+             updateNavPreviewModern(currentSectionId); 
+        }, { passive: true });
+    }
+
+    // Adjust layout for desktop/mobile on load and resize
+    function adjustLayoutPreviewModern() {
+      if (window.innerWidth < 1200) {
+        if(navTogglerBtnPreviewModern) navTogglerBtnPreviewModern.style.display = 'flex';
+        if(asidePreviewModern && !asidePreviewModern.classList.contains('open')) asidePreviewModern.style.left = '-270px';
+        if(mainContentPreviewModern && !mainContentPreviewModern.classList.contains('open-main')) {
+            mainContentPreviewModern.style.left = '0';
+            mainContentPreviewModern.style.width = '100%';
+            // mainContentPreviewModern.style.paddingLeft = '0'; // Removed this, padding is on sections
+        }
+      } else { // Desktop
+        if(navTogglerBtnPreviewModern) navTogglerBtnPreviewModern.style.display = 'none';
+        if(asidePreviewModern) asidePreviewModern.style.left = '0'; 
+        // if(asidePreviewModern) asidePreviewModern.classList.add('open'); // Don't add open, just set left
+        if(mainContentPreviewModern) {
+             mainContentPreviewModern.style.left = '270px';
+             mainContentPreviewModern.style.width = 'calc(100% - 270px)';
+            // mainContentPreviewModern.style.paddingLeft = '0';
+        }
+        // if(mainContentPreviewModern) mainContentPreviewModern.classList.add('open-main'); // Don't add open-main, just set left
+      }
+    }
+    window.addEventListener('load', adjustLayoutPreviewModern);
+    window.addEventListener('resize', adjustLayoutPreviewModern);
+    // Initial call on load
+    document.addEventListener('DOMContentLoaded', adjustLayoutPreviewModern);
+  `;
+  previewHtml += "<script src=\"https://cdnjs.cloudflare.com/ajax/libs/typed.js/2.0.12/typed.min.js\" referrerpolicy=\"no-referrer\"></script>";
+  previewHtml += "<script>" + referenceScriptJsPreview.replace(/`/g, '\\`').replace(/\$\{/g, '\\${}') + "</script>";
+  previewHtml += "</body></html>";
 
   return { fullTsx, previewHtml };
 }

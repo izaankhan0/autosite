@@ -1,9 +1,8 @@
-
 // src/components/RequirementForm.tsx
 "use client";
 
 import { zodResolver } from "@hookform/resolvers/zod";
-import { useForm } from "react-hook-form";
+import { useForm, useFieldArray } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import {
   Form,
@@ -24,9 +23,13 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
-import { Loader2 } from "lucide-react";
-import type { FormSchemaType, AcademicEntryType} from "@/schemas/websiteFormSchema";
-import { formSchema, defaultProjectValues, defaultAcademicEntryValues } from "@/schemas/websiteFormSchema";
+import { Loader2, PlusCircle, Trash2 } from "lucide-react";
+import {
+  formSchema,
+  type FormSchemaType,
+  projectSchema, 
+  academicEntrySchema, 
+} from "@/schemas/websiteFormSchema";
 import { availableThemes } from "@/templates";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Separator } from "@/components/ui/separator";
@@ -58,19 +61,9 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
       aboutBio: "A passionate individual with a knack for creating amazing things. I love to learn, explore new technologies, and contribute to impactful projects. My journey in this field has been driven by curiosity and a desire to solve real-world problems.",
       aboutSkills: "JavaScript, React, Next.js, Node.js, Python, Figma, UI/UX Design, Project Management",
       aboutFunFact: "I can solve a Rubik's cube in under a minute!",
-
-      academic1: { ...defaultAcademicEntryValues },
-      academic2: { 
-        qualification: "M.Sc. in Data Science", 
-        institution: "Institute of Advanced Studies", 
-        graduationYear: "Expected 2025",
-        grades: "N/A",
-        description: "Currently pursuing Master's degree with a focus on machine learning applications and big data analytics.",
-        imageUrl: "https://placehold.co/500x300.png?text=Achievement+2"
-      },
       
-      project1: { ...defaultProjectValues, name: "Portfolio Project One", imageUrl: "https://placehold.co/400x300.png" , description: defaultProjectValues.description, technologies: defaultProjectValues.technologies, liveUrl: defaultProjectValues.liveUrl, repoUrl: defaultProjectValues.repoUrl },
-      project2: { ...defaultProjectValues, name: "Portfolio Project Two", imageUrl: "https://placehold.co/400x300.png", description: defaultProjectValues.description, technologies: defaultProjectValues.technologies, liveUrl: defaultProjectValues.liveUrl, repoUrl: defaultProjectValues.repoUrl },
+      academicEntries: [academicEntrySchema.parse({})], 
+      projects: [projectSchema.parse({})], 
       
       contactEmail: "your.email@example.com",
       contactLinkedin: "https://linkedin.com/in/yourprofile",
@@ -79,268 +72,104 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
 
       resumeUrl: "https://example.com/your-resume.pdf",
       
-      theme: "student",
-      primaryColor: "#3B82F6", 
-      backgroundColor: "#F9FAFB", 
-      accentColor: "#10B981", 
+      theme: "student", 
+      primaryColor: "#0044b3", 
+      backgroundColor: "#001224", 
+      accentColor: "#00b8ab", 
 
-      // Section Toggles Default Values
       showAboutSection: true,
       showFunFact: true,
       showAcademicSection: true,
-      showAcademic1: true,
-      showAcademic2: false,
       showProjectsSection: true,
-      showProject1: true,
-      showProject2: true,
       showSkillsSection: true,
       showContactSection: true,
       showResumeLink: true,
     },
   });
 
-  const watchShowProject1 = form.watch("showProject1");
-  const watchShowProject2 = form.watch("showProject2");
+  const { fields: academicFields, append: appendAcademic, remove: removeAcademic } = useFieldArray({
+    control: form.control,
+    name: "academicEntries",
+  });
+
+  const { fields: projectFields, append: appendProject, remove: removeProject } = useFieldArray({
+    control: form.control,
+    name: "projects",
+  });
+
   const watchShowAboutSection = form.watch("showAboutSection");
   const watchShowAcademicSection = form.watch("showAcademicSection");
-  const watchShowAcademic1 = form.watch("showAcademic1");
-  const watchShowAcademic2 = form.watch("showAcademic2");
   const watchShowProjectsSection = form.watch("showProjectsSection");
   const watchShowContactSection = form.watch("showContactSection");
+  const watchShowSkillsSection = form.watch("showSkillsSection");
 
-  const renderAcademicFields = (academicEntryNumber: 1 | 2) => {
-    const fieldNamePrefix = academicEntryNumber === 1 ? 'academic1' : 'academic2';
-    const isVisible = academicEntryNumber === 1 ? watchShowAcademic1 : watchShowAcademic2;
-
-    if (!isVisible) return null;
-
-    return (
-      <Card className="mb-6 shadow-sm border">
-        <CardHeader>
-          <CardTitle className="text-lg">Academic Achievement {academicEntryNumber}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <FormField
-            control={form.control}
-            name={`${fieldNamePrefix}.qualification`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Qualification</FormLabel>
-                <FormControl><Input placeholder="e.g., B.Sc. Computer Science" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name={`${fieldNamePrefix}.institution`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Institution</FormLabel>
-                <FormControl><Input placeholder="e.g., University of Technology" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name={`${fieldNamePrefix}.graduationYear`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Graduation Year/Period</FormLabel>
-                  <FormControl><Input placeholder="e.g., 2023 or Expected May 2025" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`${fieldNamePrefix}.grades`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Grades/GPA (Optional)</FormLabel>
-                  <FormControl><Input placeholder="e.g., GPA: 3.8/4.0" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-          <FormField
-            control={form.control}
-            name={`${fieldNamePrefix}.description`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description (Optional)</FormLabel>
-                <FormControl><Textarea placeholder="Notable achievements, thesis, relevant coursework, etc." {...field} className="min-h-[100px]" /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name={`${fieldNamePrefix}.imageUrl`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Image URL (Optional)</FormLabel>
-                <FormControl><Input placeholder="https://placehold.co/500x300.png" {...field} /></FormControl>
-                <FormDescription>E.g., university logo, project poster. Use <a href="https://placehold.co" target="_blank" rel="noopener noreferrer" className="underline">placehold.co</a>.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </CardContent>
-      </Card>
-    );
-  };
-
-
-  const renderProjectFields = (projectNumber: 1 | 2) => {
-    const fieldName = projectNumber === 1 ? 'project1' : 'project2';
-    const isVisible = projectNumber === 1 ? watchShowProject1 : watchShowProject2;
-
-    if (!isVisible) return null;
-
-    return (
-      <Card className="mb-6 shadow-sm border">
-        <CardHeader>
-          <CardTitle className="text-lg">Project {projectNumber}</CardTitle>
-        </CardHeader>
-        <CardContent className="space-y-4">
-          <FormField
-            control={form.control}
-            name={`${fieldName}.name`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Project Name</FormLabel>
-                <FormControl><Input placeholder="Awesome App" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name={`${fieldName}.description`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Description</FormLabel>
-                <FormControl><Textarea placeholder="A short summary of the project..." {...field} className="min-h-[80px]" /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <FormField
-            control={form.control}
-            name={`${fieldName}.technologies`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Technologies Used</FormLabel>
-                <FormControl><Input placeholder="React, Node.js, Firebase" {...field} /></FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-           <FormField
-            control={form.control}
-            name={`${fieldName}.imageUrl`}
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Project Image URL (Optional)</FormLabel>
-                <FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl>
-                 <FormDescription>Recommended: 400x300. Use <a href="https://placehold.co" target="_blank" rel="noopener noreferrer" className="underline">placehold.co</a> for placeholders.</FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <FormField
-              control={form.control}
-              name={`${fieldName}.liveUrl`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Live Site URL (Optional)</FormLabel>
-                  <FormControl><Input placeholder="https://example.com" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <FormField
-              control={form.control}
-              name={`${fieldName}.repoUrl`}
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>GitHub Repo URL (Optional)</FormLabel>
-                  <FormControl><Input placeholder="https://github.com/user/repo" {...field} /></FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-        </CardContent>
-      </Card>
-    );
-  };
-
-  const defaultOpenAccordionItems = ["hero-section", "about-section", "academic-section", "projects-section", "skills-section", "contact-section"];
+  const defaultOpenAccordionItems = ["theme-colors", "hero-section", "about-section", "academic-section", "projects-section", "skills-section", "contact-section"];
 
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
         
-        <Card>
-          <CardHeader><CardTitle>🎨 Theme & Colors</CardTitle></CardHeader>
-          <CardContent className="space-y-6">
-            <FormField
-              control={form.control}
-              name="theme"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Website Theme</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
-                    <FormControl><SelectTrigger><SelectValue placeholder="Select a theme style" /></SelectTrigger></FormControl>
-                    <SelectContent>
-                      {displayThemes.map((themeOpt) => (
-                        <SelectItem key={themeOpt.value} value={themeOpt.value}>{themeOpt.label}</SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
-              <FormField control={form.control} name="primaryColor" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Primary Color</FormLabel>
-                    <FormControl><div className="flex items-center gap-2"><Input type="color" {...field} className="p-1 h-10 w-14 rounded-md border aspect-square cursor-pointer" /><Input type="text" {...field} placeholder="#RRGGBB" className="flex-1" /></div></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField control={form.control} name="backgroundColor" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Background Color</FormLabel>
-                    <FormControl><div className="flex items-center gap-2"><Input type="color" {...field} className="p-1 h-10 w-14 rounded-md border aspect-square cursor-pointer" /><Input type="text" {...field} placeholder="#RRGGBB" className="flex-1" /></div></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField control={form.control} name="accentColor" render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Accent Color</FormLabel>
-                    <FormControl><div className="flex items-center gap-2"><Input type="color" {...field} className="p-1 h-10 w-14 rounded-md border aspect-square cursor-pointer" /><Input type="text" {...field} placeholder="#RRGGBB" className="flex-1" /></div></FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            </div>
-          </CardContent>
-        </Card>
-
-        <Separator />
-
         <Accordion type="multiple" defaultValue={defaultOpenAccordionItems} className="w-full space-y-6">
           
+          <AccordionItem value="theme-colors" className="border-none p-0 data-[state=closed]:rounded-lg data-[state=open]:rounded-t-lg">
+             <Card>
+              <CardHeader className="p-0">
+                 <AccordionTrigger className="flex w-full items-center justify-between rounded-t-lg p-6 text-left hover:bg-muted/50 data-[state=closed]:rounded-b-lg transition-colors hover:no-underline">
+                  <CardTitle className="text-xl">🎨 Theme & Colors</CardTitle>
+                </AccordionTrigger>
+              </CardHeader>
+              <AccordionContent>
+                <CardContent className="space-y-6 px-6 pb-6 pt-4">
+                  <CardDescription className="mb-4">Select the overall style and color palette for your portfolio.</CardDescription>
+                  <FormField
+                    control={form.control}
+                    name="theme"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Website Theme</FormLabel>
+                        <Select onValueChange={field.onChange} defaultValue={field.value}>
+                          <FormControl><SelectTrigger><SelectValue placeholder="Select a theme style" /></SelectTrigger></FormControl>
+                          <SelectContent>
+                            {displayThemes.map((themeOpt) => (
+                              <SelectItem key={themeOpt.value} value={themeOpt.value}>{themeOpt.label}</SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 items-end">
+                    <FormField control={form.control} name="primaryColor" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Primary Color</FormLabel>
+                          <FormControl><div className="flex items-center gap-2"><Input type="color" {...field} value={field.value || "#000000"} className="p-1 h-10 w-14 rounded-md border aspect-square cursor-pointer" /><Input type="text" {...field} placeholder="#RRGGBB" className="flex-1" /></div></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField control={form.control} name="backgroundColor" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Background Color</FormLabel>
+                          <FormControl><div className="flex items-center gap-2"><Input type="color" {...field} value={field.value || "#FFFFFF"} className="p-1 h-10 w-14 rounded-md border aspect-square cursor-pointer" /><Input type="text" {...field} placeholder="#RRGGBB" className="flex-1" /></div></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                    <FormField control={form.control} name="accentColor" render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Accent Color</FormLabel>
+                          <FormControl><div className="flex items-center gap-2"><Input type="color" {...field} value={field.value || "#000000"} className="p-1 h-10 w-14 rounded-md border aspect-square cursor-pointer" /><Input type="text" {...field} placeholder="#RRGGBB" className="flex-1" /></div></FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </div>
+                </CardContent>
+              </AccordionContent>
+            </Card>
+          </AccordionItem>
+        
           <AccordionItem value="hero-section" className="border-none p-0">
             <Card>
               <CardHeader className="p-0">
@@ -350,14 +179,15 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
               </CardHeader>
               <AccordionContent>
                 <CardContent className="space-y-4 px-6 pb-6 pt-4">
+                 <CardDescription className="mb-4">This is the first impression! Make it count.</CardDescription>
                   <FormField control={form.control} name="yourName" render={({ field }) => (
                       <FormItem><FormLabel>Your Name</FormLabel><FormControl><Input placeholder="e.g., Jane Doe" {...field} /></FormControl><FormMessage /></FormItem>
                     )} />
                   <FormField control={form.control} name="heroTitle" render={({ field }) => (
-                      <FormItem><FormLabel>Title / Role</FormLabel><FormControl><Input placeholder="e.g., Full-Stack Developer" {...field} /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel>Title / Role</FormLabel><FormControl><Input placeholder="e.g., Full-Stack Developer" {...field} /></FormControl><FormDescription>You can list multiple roles separated by commas (e.g., UI/UX Designer, Frontend Developer).</FormDescription><FormMessage /></FormItem>
                     )} />
                   <FormField control={form.control} name="heroTagline" render={({ field }) => (
-                      <FormItem><FormLabel>Tagline</FormLabel><FormControl><Textarea placeholder="A catchy one-liner about what you do." {...field} className="min-h-[80px]" /></FormControl><FormMessage /></FormItem>
+                      <FormItem><FormLabel>Tagline (Optional)</FormLabel><FormControl><Textarea placeholder="A catchy one-liner about what you do." {...field} className="min-h-[80px]" /></FormControl><FormMessage /></FormItem>
                     )} />
                   <FormField control={form.control} name="heroCtaText" render={({ field }) => (
                       <FormItem><FormLabel>Call to Action Button Text</FormLabel><FormControl><Input placeholder="e.g., View My Work" {...field} /></FormControl><FormMessage /></FormItem>
@@ -366,7 +196,7 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
                       <FormItem>
                         <FormLabel>Hero Image URL (Optional)</FormLabel>
                         <FormControl><Input placeholder="https://placehold.co/600x400.png" {...field} /></FormControl>
-                        <FormDescription>Use <a href="https://placehold.co" target="_blank" rel="noopener noreferrer" className="underline">placehold.co</a> for placeholders (e.g., 600x400 for hero).</FormDescription>
+                        <FormDescription>Use <a href="https://placehold.co" target="_blank" rel="noopener noreferrer" className="underline">placehold.co</a> for placeholders.</FormDescription>
                         <FormMessage />
                       </FormItem>
                     )} />
@@ -384,6 +214,7 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
               </CardHeader>
               <AccordionContent>
                 <CardContent className="space-y-4 px-6 pb-6 pt-4">
+                 <CardDescription className="mb-4">Tell a bit about yourself and your interests.</CardDescription>
                   <FormField
                     control={form.control} name="showAboutSection"
                     render={({ field }) => (
@@ -428,14 +259,12 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
             <Card>
               <CardHeader className="p-0">
                 <AccordionTrigger className="flex w-full items-center justify-between rounded-t-lg p-6 text-left hover:bg-muted/50 data-[state=closed]:rounded-b-lg transition-colors hover:no-underline">
-                   <div className="space-y-1 text-left">
-                    <CardTitle className="text-xl">🎓 Academic Section</CardTitle>
-                    <CardDescription>Detail up to two academic achievements.</CardDescription>
-                  </div>
+                   <CardTitle className="text-xl">🎓 Academic Section</CardTitle>
                 </AccordionTrigger>
               </CardHeader>
               <AccordionContent>
                 <CardContent className="space-y-4 px-6 pb-6 pt-4">
+                <CardDescription className="mb-4">Detail up to 6 academic achievements.</CardDescription>
                   <FormField
                     control={form.control} name="showAcademicSection"
                     render={({ field }) => (
@@ -449,29 +278,47 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
                     )}
                   />
                   {watchShowAcademicSection && (
-                    <>
-                      <FormField
-                        control={form.control} name="showAcademic1"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-2">
-                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                             <FormLabel>Show Academic Achievement 1</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                      {renderAcademicFields(1)}
-                      <Separator className="my-6"/>
-                      <FormField
-                        control={form.control} name="showAcademic2"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-2">
-                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                            <FormLabel>Show Academic Achievement 2</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                      {renderAcademicFields(2)}
-                    </>
+                    <div className="space-y-6">
+                      {academicFields.map((item, index) => (
+                        <Card key={item.id} className="shadow-sm border">
+                          <CardHeader className="flex flex-row items-center justify-between py-3 px-4 bg-muted/50">
+                            <CardTitle className="text-lg">Academic Achievement {index + 1}</CardTitle>
+                            {academicFields.length > 1 && (
+                              <Button type="button" variant="ghost" size="sm" onClick={() => removeAcademic(index)} className="text-destructive hover:bg-destructive/10">
+                                <Trash2 className="h-4 w-4 mr-1" /> Remove
+                              </Button>
+                            )}
+                          </CardHeader>
+                          <CardContent className="space-y-4 p-4">
+                            <FormField control={form.control} name={`academicEntries.${index}.qualification`} render={({ field }) => (
+                                <FormItem><FormLabel>Qualification</FormLabel><FormControl><Input placeholder="e.g., B.Sc. Computer Science" {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                            <FormField control={form.control} name={`academicEntries.${index}.institution`} render={({ field }) => (
+                              <FormItem><FormLabel>Institution</FormLabel><FormControl><Input placeholder="e.g., University of Technology" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField control={form.control} name={`academicEntries.${index}.graduationYear`} render={({ field }) => (
+                                <FormItem><FormLabel>Graduation Year/Period</FormLabel><FormControl><Input placeholder="e.g., 2023 or Expected May 2025" {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                              <FormField control={form.control} name={`academicEntries.${index}.grades`} render={({ field }) => (
+                                <FormItem><FormLabel>Grades/GPA (Optional)</FormLabel><FormControl><Input placeholder="e.g., GPA: 3.8/4.0" {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                            </div>
+                            <FormField control={form.control} name={`academicEntries.${index}.description`} render={({ field }) => (
+                              <FormItem><FormLabel>Description (Optional)</FormLabel><FormControl><Textarea placeholder="Notable achievements, thesis, relevant coursework, etc." {...field} className="min-h-[100px]" /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name={`academicEntries.${index}.imageUrl`} render={({ field }) => (
+                              <FormItem><FormLabel>Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://placehold.co/500x300.png" {...field} /></FormControl><FormDescription>E.g., university logo. Use <a href="https://placehold.co" target="_blank" rel="noopener noreferrer" className="underline">placehold.co</a>.</FormDescription><FormMessage /></FormItem>
+                            )} />
+                          </CardContent>
+                        </Card>
+                      ))}
+                      {academicFields.length < 6 && (
+                        <Button type="button" variant="outline" onClick={() => appendAcademic(academicEntrySchema.parse({}))}>
+                          <PlusCircle className="h-4 w-4 mr-2" /> Add Academic Achievement
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </AccordionContent>
@@ -481,15 +328,13 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
           <AccordionItem value="projects-section" className="border-none p-0">
             <Card>
               <CardHeader className="p-0">
-                <AccordionTrigger className="flex w-full items-start justify-between rounded-t-lg p-6 text-left hover:bg-muted/50 data-[state=closed]:rounded-b-lg transition-colors hover:no-underline">
-                  <div className="space-y-1 text-left">
+                <AccordionTrigger className="flex w-full items-center justify-between rounded-t-lg p-6 text-left hover:bg-muted/50 data-[state=closed]:rounded-b-lg transition-colors hover:no-underline">
                     <CardTitle className="text-xl">🚀 Projects Section</CardTitle>
-                    <CardDescription>Showcase up to two of your best projects.</CardDescription>
-                  </div>
                 </AccordionTrigger>
               </CardHeader>
               <AccordionContent>
                 <CardContent className="px-6 pb-6 pt-4 space-y-4">
+                <CardDescription className="mb-4">Showcase up to 6 of your best projects.</CardDescription>
                   <FormField
                     control={form.control} name="showProjectsSection"
                     render={({ field }) => (
@@ -503,29 +348,47 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
                     )}
                   />
                   {watchShowProjectsSection && (
-                    <>
-                      <FormField
-                        control={form.control} name="showProject1"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-2">
-                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                             <FormLabel>Show Project 1</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                      {renderProjectFields(1)}
-                      <Separator className="my-6"/>
-                      <FormField
-                        control={form.control} name="showProject2"
-                        render={({ field }) => (
-                          <FormItem className="flex flex-row items-start space-x-3 space-y-0 mb-2">
-                            <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
-                            <FormLabel>Show Project 2</FormLabel>
-                          </FormItem>
-                        )}
-                      />
-                      {renderProjectFields(2)}
-                    </>
+                    <div className="space-y-6">
+                      {projectFields.map((item, index) => (
+                        <Card key={item.id} className="shadow-sm border">
+                          <CardHeader className="flex flex-row items-center justify-between py-3 px-4 bg-muted/50">
+                            <CardTitle className="text-lg">Project {index + 1}</CardTitle>
+                            {projectFields.length > 1 && (
+                              <Button type="button" variant="ghost" size="sm" onClick={() => removeProject(index)} className="text-destructive hover:bg-destructive/10">
+                                <Trash2 className="h-4 w-4 mr-1" /> Remove
+                              </Button>
+                            )}
+                          </CardHeader>
+                          <CardContent className="space-y-4 p-4">
+                            <FormField control={form.control} name={`projects.${index}.name`} render={({ field }) => (
+                                <FormItem><FormLabel>Project Name</FormLabel><FormControl><Input placeholder="Awesome App" {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                            <FormField control={form.control} name={`projects.${index}.description`} render={({ field }) => (
+                              <FormItem><FormLabel>Description</FormLabel><FormControl><Textarea placeholder="A short summary of the project..." {...field} className="min-h-[80px]" /></FormControl><FormMessage /></FormItem>
+                            )} />
+                            <FormField control={form.control} name={`projects.${index}.technologies`} render={({ field }) => (
+                              <FormItem><FormLabel>Technologies Used</FormLabel><FormControl><Input placeholder="React, Node.js, Firebase" {...field} /></FormControl><FormMessage /></FormItem>
+                            )} />
+                           <FormField control={form.control} name={`projects.${index}.imageUrl`} render={({ field }) => (
+                              <FormItem><FormLabel>Project Image URL (Optional)</FormLabel><FormControl><Input placeholder="https://example.com/image.png" {...field} /></FormControl><FormDescription>Recommended: 400x300. Use <a href="https://placehold.co" target="_blank" rel="noopener noreferrer" className="underline">placehold.co</a>.</FormDescription><FormMessage /></FormItem>
+                            )} />
+                            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                              <FormField control={form.control} name={`projects.${index}.liveUrl`} render={({ field }) => (
+                                <FormItem><FormLabel>Live Site URL (Optional)</FormLabel><FormControl><Input placeholder="https://example.com" {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                              <FormField control={form.control} name={`projects.${index}.repoUrl`} render={({ field }) => (
+                                <FormItem><FormLabel>GitHub Repo URL (Optional)</FormLabel><FormControl><Input placeholder="https://github.com/user/repo" {...field} /></FormControl><FormMessage /></FormItem>
+                              )} />
+                            </div>
+                          </CardContent>
+                        </Card>
+                      ))}
+                      {projectFields.length < 6 && (
+                        <Button type="button" variant="outline" onClick={() => appendProject(projectSchema.parse({}))}>
+                          <PlusCircle className="h-4 w-4 mr-2" /> Add Project
+                        </Button>
+                      )}
+                    </div>
                   )}
                 </CardContent>
               </AccordionContent>
@@ -541,6 +404,7 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
               </CardHeader>
               <AccordionContent>
                 <CardContent className="space-y-4 px-6 pb-6 pt-4">
+                 <CardDescription className="mb-4">List your key skills and technologies.</CardDescription>
                     <FormField
                         control={form.control} name="showSkillsSection"
                         render={({ field }) => (
@@ -553,9 +417,9 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
                         </FormItem>
                         )}
                     />
-                    {form.watch("showSkillsSection") && (
+                    {watchShowSkillsSection && (
                          <FormField control={form.control} name="aboutSkills" render={({ field }) => (
-                            <FormItem><FormLabel>Key Skills</FormLabel><FormControl><Textarea placeholder="e.g., JavaScript, React, Python, Figma, UI/UX Design (can be comma-separated or a paragraph)" {...field} className="min-h-[100px]" /></FormControl><FormDescription>Comma-separated or a paragraph.</FormDescription><FormMessage /></FormItem>
+                            <FormItem><FormLabel>Key Skills</FormLabel><FormControl><Textarea placeholder="e.g., JavaScript, React, Python, Figma, UI/UX Design" {...field} className="min-h-[100px]" /></FormControl><FormDescription>Comma-separated or a paragraph.</FormDescription><FormMessage /></FormItem>
                         )} />
                     )}
                 </CardContent>
@@ -567,18 +431,19 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
             <Card>
               <CardHeader className="p-0">
                 <AccordionTrigger className="flex w-full items-center justify-between rounded-t-lg p-6 text-left hover:bg-muted/50 data-[state=closed]:rounded-b-lg transition-colors hover:no-underline">
-                  <CardTitle className="text-xl">📞 Contact &amp; Links (Footer)</CardTitle>
+                  <CardTitle className="text-xl">📞 Contact & Links (Footer)</CardTitle>
                 </AccordionTrigger>
               </CardHeader>
               <AccordionContent>
                 <CardContent className="space-y-4 px-6 pb-6 pt-4">
+                 <CardDescription className="mb-4">How can people reach you? This information will appear in the footer.</CardDescription>
                   <FormField
                     control={form.control} name="showContactSection"
                     render={({ field }) => (
                       <FormItem className="flex flex-row items-start space-x-3 space-y-0 rounded-md border p-4 shadow mb-4">
                         <FormControl><Checkbox checked={field.value} onCheckedChange={field.onChange} /></FormControl>
                         <div className="space-y-1 leading-none">
-                          <FormLabel>Show Footer (Contact Info &amp; Links)</FormLabel>
+                          <FormLabel>Show Footer (Contact Info & Links)</FormLabel>
                           <FormDescription>Include footer with contact information and social links.</FormDescription>
                         </div>
                       </FormItem>
@@ -625,11 +490,11 @@ export function RequirementForm({ onSubmit, isLoading }: RequirementFormProps) {
 
         <Separator />
 
-        <div className="flex flex-col sm:flex-row gap-2 pt-4">
-          <Button type="submit" disabled={isLoading} className="w-full sm:w-auto">
+        <div className="flex flex-col sm:flex-row justify-end gap-4 pt-6">
+          <Button type="submit" disabled={isLoading} className="w-full sm:w-auto px-6 py-3 text-base">
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Loader2 className="mr-2 h-5 w-5 animate-spin" />
                 Generating Portfolio...
               </>
             ) : (
